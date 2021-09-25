@@ -9,7 +9,7 @@ EurolitePar::EurolitePar(int address){
     ch_strobe = start_address+5;
 }
 
-EurolitePar::change_color(int color = RED){
+void EurolitePar::change_color(int color = RED){
     switch(color){
         case RED:
             DmxSimple.write(ch_red, 255);
@@ -47,13 +47,13 @@ EurolitePar::change_color(int color = RED){
 
 }
 
-EurolitePar::strobe(int speed, int color = WHITE){
+void EurolitePar::strobe(int speed, int color = WHITE){
     change_color(color);
     map(speed,0,255,0,200); //da controllare massimo valore prima del random
     DmxSimple.write(ch_strobe, speed);
 }
 
-EurolitePar::rainbow(){
+void EurolitePar::rainbow(){
     int color = rand() %6 +1; //generate a random number from 1 to 6
     change_color(color);
 }
