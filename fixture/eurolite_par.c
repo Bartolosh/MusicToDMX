@@ -1,7 +1,7 @@
 #include "eurolite_par.h"
 
 void init_eurolitepar(eurolite_par *par, int start_address){
-    par->start_address = address;
+    par->start_address = start_address;
     par->ch_red = start_address;
     par->ch_blue = start_address+1;
     par->ch_green = start_address+2;
@@ -16,7 +16,7 @@ void change_color(eurolite_par par,int color){
             DmxSimple.write(par.ch_blue, 0);
             DmxSimple.write(par.ch_green,0);
             break;
-        case BLUE;
+        case BLUE:
             DmxSimple.write(par.ch_red, 0);
             DmxSimple.write(par.ch_blue, 255);
             DmxSimple.write(par.ch_green,0);
@@ -45,7 +45,7 @@ void change_color(eurolite_par par,int color){
 
     DmxSimple.write(par.ch_dimmer, 255);
 }
-void strobe(eurolite_par par, int speed, int color){
+void strobe_par(eurolite_par par, int speed, int color){
     change_color(par, color);
     map(speed,0,255,0,200); //da controllare massimo valore prima del random
     DmxSimple.write(par.ch_strobe, speed);
