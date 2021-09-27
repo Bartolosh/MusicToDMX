@@ -89,12 +89,12 @@ void MovingHead::up_down(int color = WHITE, int speed){
             state = DOWN2;
             break;
         case DOWN2:
-            DmxSimple.write(ch_pan, 20);
+            DmxSimple.write(ch_pan, 128);
             DmxSimple.write(ch_tilt, 40);
             state = UP1;
             break;
         default:
-            DmxSimple.write(ch_pan, 20);
+            DmxSimple.write(ch_pan, 128);
             DmxSimple.write(ch_tilt, 40);
             state = UP1;
             break;
