@@ -35,7 +35,7 @@ void set_color(moving_head head,int color){
     DmxSimple.write(head.ch_dimmer, 255);
 }
 
-void rotate(moving_head &head, int speed, int color){
+void rotate(moving_head *head, int speed, int color){
     set_color(*head, color);
     DmxSimple.write(head->ch_speed, speed);
 
@@ -69,13 +69,13 @@ void rotate(moving_head &head, int speed, int color){
     }
 }
 
-void strobe(moving_head head, int speed, int color){
-    set_color(color);
+void strobe_head(moving_head head, int speed, int color){
+    set_color(head, color);
     map(speed, 0, 255, 0, 128); //Controllare velocità strobe
-    DmxSimple.write(head.ch_strobe, speed)
+    DmxSimple.write(head.ch_strobe, speed);
 }
 
-void up_down(moving_head *head, int speed){
+void up_down(moving_head *head, int color, int speed){
     set_color(*head, color);
 
     DmxSimple.write(head->ch_speed, speed);

@@ -5,7 +5,7 @@
 #ifndef MovingHead_h
 #define MovingHead_h
 
-#include <DmxSimple.h>
+#include <DmxSimple.h> //scaricare
 #include "color.h"
 #include <stdlib.h> //usata per random
 
@@ -34,10 +34,10 @@ void init_movinghead(moving_head *head, int start_address);
 
 void set_color(moving_head head,int color);
 
-void rotate(moving_head head, int speed, int color);
+void rotate(moving_head *head, int speed, int color);
 
-void strobe(moving_head head, int speed, int color);
+void strobe_head(moving_head head, int speed, int color);
 
-void up_down(moving_head head, int speed);
+void up_down(moving_head *head, int color, int speed);
 
 #endif
