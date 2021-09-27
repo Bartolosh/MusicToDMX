@@ -21,7 +21,7 @@ typedef struct{
 void init_eurolitepar(eurolite_par *par, int start_address);
 
 void change_color(eurolite_par par,int color);
-void strobe(eurolite_par par, int speed, int color);
+void strobe_par(eurolite_par par, int speed, int color);
 void rainbow(eurolite_par par);
 
 #endif
