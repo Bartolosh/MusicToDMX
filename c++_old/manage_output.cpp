@@ -2,6 +2,7 @@
 #include "./fixtures/moving_head.h"
 
 #include <stdlib.h>
+#include <DmxSimple.h>
 
 void send_output(int speed){
     EurolitePar par1 = EurolitePar(1);
@@ -10,6 +11,8 @@ void send_output(int speed){
 
     MovingHead mov1 = MovingHead(19);
     MovingHead mov2 = MovingHead(41); //todo control address
+
+    DmxSimple.maxChannel(70);
 
     int color = rand() %6 +1;
 
