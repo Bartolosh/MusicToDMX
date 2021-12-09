@@ -1,4 +1,4 @@
-#include "mic_params.h"
+#include "mbed.h"
 #include "microphone/MP34DT01/stm32l475e_iot01_audio.h"
 
 
