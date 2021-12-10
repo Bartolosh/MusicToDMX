@@ -1,4 +1,5 @@
 #include "arm_math.h"
+#include "arm_const_struct.h"
 #include <stdio.h>
 
 #define SAMPLES 2048
