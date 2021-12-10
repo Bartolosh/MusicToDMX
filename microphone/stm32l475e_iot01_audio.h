@@ -29,6 +29,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l475e_iot01_conf.h"
 #include "stm32l475e_iot01_errno.h"
+#include "stm32l4xx_hal_dfsdm.h"
 #include <stdint.h>
 
 /** @addtogroup BSP
@@ -46,6 +47,8 @@
 /** @defgroup STM32L475E_IOT01_AUDIO_IN_Exported_Types STM32L475E_IOT01 AUDIO_IN Exported Types
   * @{
   */
+
+
 typedef struct
 {
   uint32_t Device;        /* Output or input device */
