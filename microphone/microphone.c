@@ -1,5 +1,5 @@
-#include "mbed.h"
-#include "microphone/MP34DT01/stm32l475e_iot01_audio.h"
+//#include "mbed.h"
+#include "microphone.h"
 
 static uint16_t PCM_Buffer[PCM_BUFFER_LEN / 2];
 static size_t TARGET_AUDIO_BUFFER_IX = 0;
@@ -16,6 +16,7 @@ static int16_t *TARGET_AUDIO_BUFFER;
 
 void init_buffer(int16_t *BUFFER){
     TARGET_AUDIO_BUFFER = BUFFER;
+    print("target buffer inizialize\n")
 }
 
 // callback that gets invoked when TARGET_AUDIO_BUFFER is full
