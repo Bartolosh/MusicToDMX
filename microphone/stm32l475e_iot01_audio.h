@@ -29,6 +29,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l475e_iot01_conf.h"
 #include "stm32l475e_iot01_errno.h"
+#include <stdint.h>
 
 /** @addtogroup BSP
   * @{
