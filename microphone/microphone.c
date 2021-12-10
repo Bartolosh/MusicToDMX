@@ -1,8 +1,22 @@
 #include "mbed.h"
 #include "microphone/MP34DT01/stm32l475e_iot01_audio.h"
 
+static uint16_t PCM_Buffer[PCM_BUFFER_LEN / 2];
+static size_t TARGET_AUDIO_BUFFER_IX = 0;
+// Place to store final audio (alloc on the heap), here two seconds...
+static size_t TARGET_AUDIO_BUFFER_NB_SAMPLES = AUDIO_SAMPLING_FREQUENCY * 2;
+
+// we skip the first 50 events (100 ms.) to not record the button click
+static size_t SKIP_FIRST_EVENTS = 50;
+static size_t half_transfer_events = 0;
+static size_t transfer_complete_events = 0;
 
 
+static int16_t *TARGET_AUDIO_BUFFER;
+
+void init_buffer(int16_t *BUFFER){
+    TARGET_AUDIO_BUFFER = BUFFER;
+}
 
 // callback that gets invoked when TARGET_AUDIO_BUFFER is full
 void target_audio_buffer_full() {
@@ -16,13 +30,6 @@ void target_audio_buffer_full() {
     }
 
     printf("Total complete events: %lu, index is %lu\n", transfer_complete_events, TARGET_AUDIO_BUFFER_IX);
-
-    // print both the WAV header and the audio buffer in HEX format to serial
-    // you can use the script in `hex-to-buffer.js` to make a proper WAV file again
-    printf("WAV file:\n");
-    for (size_t ix = 0; ix < 44; ix++) {
-        printf("%02x", wav_header[ix]);
-    }
 
     uint8_t *buf = (uint8_t*)TARGET_AUDIO_BUFFER;
     for (size_t ix = 0; ix < TARGET_AUDIO_BUFFER_NB_SAMPLES * 2; ix++) {

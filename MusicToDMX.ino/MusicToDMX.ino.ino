@@ -1,27 +1,25 @@
 #include <STM32FreeRTOS.h>
 #include <timers.h>
 #include <semphr.h>
+#include "microphone/MP34DT01/stm32l475e_iot01_audio.h"
+#TODO include mic
 
-##################################### INIT BUFFER AND USEFUL VARIABLE ###########################
 
-static uint16_t PCM_Buffer[PCM_BUFFER_LEN / 2];
+################################## INIT BUFFER AND USEFUL VARIABLE ###########################
+
 static BSP_AUDIO_Init_t MicParams;
     
-// Place to store final audio (alloc on the heap), here two seconds...
-static size_t TARGET_AUDIO_BUFFER_NB_SAMPLES = AUDIO_SAMPLING_FREQUENCY * 2;
-static int16_t *TARGET_AUDIO_BUFFER = (int16_t*)calloc(TARGET_AUDIO_BUFFER_NB_SAMPLES, sizeof(int16_t));
-static size_t TARGET_AUDIO_BUFFER_IX = 0;
-    
-// we skip the first 50 events (100 ms.) to not record the button click
-static size_t SKIP_FIRST_EVENTS = 50;
-static size_t half_transfer_events = 0;
-static size_t transfer_complete_events = 0;
+
+static int16_t *BUFFER_RIS = (int16_t*)calloc(AUDIO_SAMPLING_FREQUENCY * 2, sizeof(int16_t));
 
 void mic_init(){
-    if (!TARGET_AUDIO_BUFFER) {
-            printf("Failed to allocate TARGET_AUDIO_BUFFER buffer\n");
+    
+    if (!BUFFER_RIS) {
+            printf("Failed to allocate BUFFER_RIS buffer\n");
             return 0;
         }
+    
+    init_buffer(BUFFER_RIS);
 
     // set up the microphone
     MicParams.BitsPerSample = 16;
@@ -42,7 +40,7 @@ void mic_init(){
 }
 
 void setup() {
-  // put your setup code here, to run once:
+  mic_init();
   
 }
 
