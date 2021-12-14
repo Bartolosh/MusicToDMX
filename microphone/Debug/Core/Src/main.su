@@ -1,6 +1,7 @@
 main.c:69:5:mic_init	16	static
 main.c:100:6:taskTakeMic	16	static
-main.c:113:5:main	16	static
-main.c:174:6:SystemClock_Config	96	static
-main.c:230:6:HAL_TIM_PeriodElapsedCallback	16	static
-main.c:247:6:Error_Handler	4	static,ignoring_inline_asm
+main.c:114:5:main	16	static
+main.c:175:6:SystemClock_Config	96	static
+main.c:220:6:sbaccioGay	4	static
+main.c:236:6:HAL_TIM_PeriodElapsedCallback	16	static
+main.c:253:6:Error_Handler	4	static,ignoring_inline_asm
