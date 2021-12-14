@@ -97,13 +97,6 @@ int mic_init(){
 
 }
 
-void taskTakeMic(void *pvParameters){
-	while(1){
-		start_recording();
-	}
-}
-
-
 /* USER CODE END 0 */
 
 /**
@@ -143,8 +136,8 @@ int main(void)
     };
 
 
-  xTaskCreate(taskTakeMic, "taskMic", 115, NULL, 0, NULL);
-  printf("task create\n");
+  //xTaskCreate(taskTakeMic, "taskMic", 115, NULL, 0, NULL);
+  //printf("task create\n");
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -158,8 +151,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

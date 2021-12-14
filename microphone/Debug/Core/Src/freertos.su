@@ -1,3 +1,4 @@
-freertos.c:85:6:MX_FREERTOS_Init	8	static
-freertos.c:133:6:StartDefaultTask	16	static
-freertos.c:151:6:test_out	16	static
+freertos.c:86:6:MX_FREERTOS_Init	8	static
+freertos.c:135:6:StartDefaultTask	16	static
+freertos.c:153:6:test_out	16	static
+freertos.c:166:6:taskTakeMic	16	static

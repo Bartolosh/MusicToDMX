@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "microphone.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -69,7 +69,8 @@ const osMutexAttr_t buffer_mutex_attributes = {
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-
+osThreadId_t tasktest_mic;
+void taskTakeMic(void *pvParameters);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -117,6 +118,7 @@ void MX_FREERTOS_Init(void) {
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
+  tasktest_mic = osThreadNew(taskTakeMic, NULL, &tasktest_out_attributes);
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
@@ -161,6 +163,12 @@ void test_out(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+void taskTakeMic(void *pvParameters){
+	while(1){
+		start_recording();
+		printf("restart\n");
+	}
+}
 
 /* USER CODE END Application */
 

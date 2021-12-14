@@ -72,6 +72,7 @@
 #include <stdio.h>
 #include "stm32l475e_iot01_audio.h"
 #include "main.h"
+#include "microphone.h"
 
 /** @addtogroup BSP
   * @{
@@ -302,7 +303,126 @@ int32_t BSP_AUDIO_IN_Init(uint32_t Instance, BSP_AUDIO_Init_t *AudioInit)
        Error_Handler();
      }
 
+#if (USE_HAL_DFSDM_REGISTER_CALLBACKS == 0)
+      if ((Audio_In_Ctx[Instance].Device & AUDIO_IN_DIGITAL_MIC1) == AUDIO_IN_DIGITAL_MIC1)
+      {
+        DFSDM_ChannelMspInit(&hdfsdm1_channel0);
+        DFSDM_FilterMspInit(&hdfsdm1_filter0);
+      }
+      if ((Audio_In_Ctx[Instance].Device & AUDIO_IN_DIGITAL_MIC2) == AUDIO_IN_DIGITAL_MIC2)
+      {
+        DFSDM_ChannelMspInit(&hdfsdm1_channel1);
+        DFSDM_FilterMspInit(&hdfsdm1_filter1);
+      }
+#else
+      /* Register the DFSDM MSP Callbacks*/
+      if(AudioIn_IsMspCbValid[Instance] == 0U)
+      {
+        if(BSP_AUDIO_IN_RegisterDefaultMspCallbacks(Instance) != BSP_ERROR_NONE)
+        {
+          status = BSP_ERROR_PERIPH_FAILURE;
+        }
+      }
+#endif  /* (USE_HAL_DFSDM_REGISTER_CALLBACKS == 0) */
+      if (status == BSP_ERROR_NONE)
+      {
+        /* Prepare DFSDM peripheral initialization */
+        MX_DFSDM_InitTypeDef mxDfsdmInit;
+        if ((Audio_In_Ctx[Instance].Device & AUDIO_IN_DIGITAL_MIC1) == AUDIO_IN_DIGITAL_MIC1)
+        {
+          mxDfsdmInit.ChannelInstance = DFSDM1_Channel2;
+          mxDfsdmInit.ClockDivider    = DFSDM_CLOCK_DIVIDER(Audio_In_Ctx[Instance].SampleRate);
+          mxDfsdmInit.DigitalMicPins  = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
+          mxDfsdmInit.DigitalMicType  = DFSDM_CHANNEL_SPI_FALLING;
+          mxDfsdmInit.RightBitShift   = DFSDM_MIC_BIT_SHIFT(Audio_In_Ctx[Instance].SampleRate);
+          mxDfsdmInit.Channel4Filter  = DFSDM_CHANNEL_2;
+          mxDfsdmInit.FilterInstance  = DFSDM1_Filter0;
+          mxDfsdmInit.RegularTrigger  = DFSDM_FILTER_SW_TRIGGER;
+          mxDfsdmInit.SincOrder       = DFSDM_FILTER_ORDER(Audio_In_Ctx[Instance].SampleRate);
+          mxDfsdmInit.Oversampling    = DFSDM_OVER_SAMPLING(Audio_In_Ctx[Instance].SampleRate);
+          if (MX_DFSDM1_Init(&hdfsdm1_filter0, &hdfsdm1_channel0, &mxDfsdmInit) != HAL_OK)
+          {
+            status = BSP_ERROR_PERIPH_FAILURE;
+          }
+#if (USE_HAL_DFSDM_REGISTER_CALLBACKS == 1)
+          if (status == BSP_ERROR_NONE)
+          {
+            /* Register DFSDM filter TC, HT and Error callbacks */
+            if (HAL_DFSDM_Filter_RegisterCallback(&hdfsdm1_filter0, HAL_DFSDM_FILTER_REGCONV_COMPLETE_CB_ID, DFSDM_FilterRegConvCpltCallback) != HAL_OK)
+            {
+              status = BSP_ERROR_PERIPH_FAILURE;
+            }
+            else if (HAL_DFSDM_Filter_RegisterCallback(&hdfsdm1_filter0, HAL_DFSDM_FILTER_REGCONV_HALFCOMPLETE_CB_ID, DFSDM_FilterRegConvHalfCpltCallback) != HAL_OK)
+            {
+              status = BSP_ERROR_PERIPH_FAILURE;
+            }
+            else
+            {
+              if (HAL_DFSDM_Filter_RegisterCallback(&hdfsdm1_filter0, HAL_DFSDM_FILTER_ERROR_CB_ID, DFSDM_FilterErrorCallback) != HAL_OK)
+              {
+                status = BSP_ERROR_PERIPH_FAILURE;
+              }
+            }
+          }
+#endif /* (USE_HAL_DFSDM_REGISTER_CALLBACKS == 1) */
+        }
+        if (((Audio_In_Ctx[Instance].Device & AUDIO_IN_DIGITAL_MIC2) == AUDIO_IN_DIGITAL_MIC2) && (status == BSP_ERROR_NONE))
+        {
+          mxDfsdmInit.ChannelInstance = DFSDM1_Channel1;
+          mxDfsdmInit.ClockDivider    = DFSDM_CLOCK_DIVIDER(Audio_In_Ctx[Instance].SampleRate);
+          mxDfsdmInit.DigitalMicPins  = DFSDM_CHANNEL_FOLLOWING_CHANNEL_PINS;
+          mxDfsdmInit.DigitalMicType  = DFSDM_CHANNEL_SPI_RISING;
+          mxDfsdmInit.RightBitShift   = DFSDM_MIC_BIT_SHIFT(Audio_In_Ctx[Instance].SampleRate);
+          mxDfsdmInit.Channel4Filter  = DFSDM_CHANNEL_1;
+          mxDfsdmInit.FilterInstance  = DFSDM1_Filter1;
+          if (Audio_In_Ctx[Instance].Device == AUDIO_IN_DIGITAL_MIC2)
+          {
+            mxDfsdmInit.RegularTrigger  = DFSDM_FILTER_SW_TRIGGER;
+          }
+          else
+          {
+            mxDfsdmInit.RegularTrigger  = DFSDM_FILTER_SYNC_TRIGGER;
+          }
+          mxDfsdmInit.SincOrder       = DFSDM_FILTER_ORDER(Audio_In_Ctx[Instance].SampleRate);
+          mxDfsdmInit.Oversampling    = DFSDM_OVER_SAMPLING(Audio_In_Ctx[Instance].SampleRate);
+          if (MX_DFSDM1_Init(&hdfsdm1_filter1, &hdfsdm1_channel1, &mxDfsdmInit) != HAL_OK)
+          {
+            status = BSP_ERROR_PERIPH_FAILURE;
+          }
+#if (USE_HAL_DFSDM_REGISTER_CALLBACKS == 1)
+          if (status == BSP_ERROR_NONE)
+          {
+            /* Register DFSDM filter TC, HT and Error callbacks */
+            if (HAL_DFSDM_Filter_RegisterCallback(&hdfsdm1_filter1, HAL_DFSDM_FILTER_REGCONV_COMPLETE_CB_ID, DFSDM_FilterRegConvCpltCallback) != HAL_OK)
+            {
+              status = BSP_ERROR_PERIPH_FAILURE;
+            }
+            else if (HAL_DFSDM_Filter_RegisterCallback(&hdfsdm1_filter1, HAL_DFSDM_FILTER_REGCONV_HALFCOMPLETE_CB_ID, DFSDM_FilterRegConvHalfCpltCallback) != HAL_OK)
+            {
+              status = BSP_ERROR_PERIPH_FAILURE;
+            }
+            else
+            {
+              if (HAL_DFSDM_Filter_RegisterCallback(&hdfsdm1_filter1, HAL_DFSDM_FILTER_ERROR_CB_ID, DFSDM_FilterErrorCallback) != HAL_OK)
+              {
+                status = BSP_ERROR_PERIPH_FAILURE;
+              }
+            }
+          }
+#endif /* (USE_HAL_DFSDM_REGISTER_CALLBACKS == 1) */
+        }
+        if (status == BSP_ERROR_NONE)
+        {
+          /* Initialise transfer control flag */
+          Audio_DmaDigMic1RecHalfBuffCplt = 0;
+          Audio_DmaDigMic1RecBuffCplt     = 0;
+          Audio_DmaDigMic2RecHalfBuffCplt = 0;
+          Audio_DmaDigMic2RecBuffCplt     = 0;
 
+          /* Update audio in context state */
+          Audio_In_Ctx[Instance].State = AUDIO_IN_STATE_STOP;
+        }
+      }
 
   }
   return status;
