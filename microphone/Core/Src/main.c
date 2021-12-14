@@ -25,7 +25,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32l475e_iot01_audio.h"
+#include "microphone.h"
+#include <stdlib.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,6 +61,49 @@ void MX_FREERTOS_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+static BSP_AUDIO_Init_t MicParams;
+    
+
+static int16_t *BUFFER_RIS;
+
+int mic_init(){
+    
+	BUFFER_RIS = (int16_t*)calloc(AUDIO_SAMPLING_FREQUENCY * 2, sizeof(int16_t));
+
+    if (!BUFFER_RIS) {
+            printf("Failed to allocate BUFFER_RIS buffer\n");
+            return -1;
+        }
+    
+    init_buffer(BUFFER_RIS);
+
+    // set up the microphone
+    MicParams.BitsPerSample = 16;
+    MicParams.ChannelsNbr = AUDIO_CHANNELS;
+    MicParams.Device = AUDIO_IN_DIGITAL_MIC1;
+    MicParams.SampleRate = AUDIO_SAMPLING_FREQUENCY;
+    MicParams.Volume = 32;
+
+    int32_t ret = BSP_AUDIO_IN_Init(AUDIO_INSTANCE, &MicParams);
+
+    if (ret != BSP_ERROR_NONE) {
+        printf("Error Audio Init (%ld)\r\n", ret);
+        return -1;
+    } else {
+        printf("OK Audio Init\t(Audio Freq=%d)\r\n", AUDIO_SAMPLING_FREQUENCY);
+    }
+
+    return 0;
+
+}
+
+void taskTakeMic(void *pvParameters){
+	while(1){
+		start_recording();
+	}
+}
+
+
 /* USER CODE END 0 */
 
 /**
@@ -89,9 +135,16 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_DFSDM1_Init();
+  //MX_DFSDM1_Init(); USING INIT FROM EXTERNAL LIBRARY
   /* USER CODE BEGIN 2 */
+  if(mic_init() == -1){
+      printf("Something goes wrong");
+      return -1;
+    };
 
+
+  xTaskCreate(taskTakeMic, "taskMic", 115, NULL, 0, NULL);
+  printf("task create\n");
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -105,6 +158,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

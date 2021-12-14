@@ -1,6 +1,6 @@
 #include "stm32l475e_iot01_audio.h"
 
-HAL_StatusTypeDef MX_DFSDM1_ClockConfig(DFSDM_Channel_HandleTypeDef *hDfsdmChannel, uint32_t SampleRate) {
+HAL_StatusTypeDef MX_DFSDM1_ClockConfig_old(DFSDM_Channel_HandleTypeDef *hDfsdmChannel, uint32_t SampleRate) {
     /* Prevent unused argument(s) compilation warning */
     UNUSED(hDfsdmChannel);
 
@@ -17,9 +17,9 @@ HAL_StatusTypeDef MX_DFSDM1_ClockConfig(DFSDM_Channel_HandleTypeDef *hDfsdmChann
        SAI_CK_x = PLLSAI1_VCO/PLLSAI1P = 2344 / 7 = 49.142 MHz */
     RCC_ExCLKInitStruct.PeriphClockSelection    = RCC_PERIPHCLK_SAI1;
     RCC_ExCLKInitStruct.PLLSAI1.PLLSAI1Source   = RCC_PLLSOURCE_MSI;
-    RCC_ExCLKInitStruct.PLLSAI1.PLLSAI1M        = 6;
+    RCC_ExCLKInitStruct.PLLSAI1.PLLSAI1M        = 7;
     RCC_ExCLKInitStruct.PLLSAI1.PLLSAI1N        = 43;
-    RCC_ExCLKInitStruct.PLLSAI1.PLLSAI1P        = 7;
+    RCC_ExCLKInitStruct.PLLSAI1.PLLSAI1P        = 6;
     RCC_ExCLKInitStruct.PLLSAI1.PLLSAI1ClockOut = RCC_PLLSAI1_SAI1CLK;
     RCC_ExCLKInitStruct.Sai1ClockSelection      = RCC_SAI1CLKSOURCE_PLLSAI1;
     status = HAL_RCCEx_PeriphCLKConfig(&RCC_ExCLKInitStruct);

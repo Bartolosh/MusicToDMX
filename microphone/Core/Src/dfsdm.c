@@ -32,7 +32,7 @@ DMA_HandleTypeDef hdma_dfsdm1_flt0;
 DMA_HandleTypeDef hdma_dfsdm1_flt1;
 
 /* DFSDM1 init function */
-void MX_DFSDM1_Init(void)
+void MX_DFSDM1_Init_old(void)
 {
 
   /* USER CODE BEGIN DFSDM1_Init 0 */

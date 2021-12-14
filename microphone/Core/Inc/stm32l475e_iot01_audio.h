@@ -159,8 +159,12 @@ typedef struct
 extern AUDIO_IN_Ctx_t  Audio_In_Ctx[AUDIO_IN_INSTANCES_NBR];
 
 /* Audio in DFSDM handles */
-extern DFSDM_Channel_HandleTypeDef haudio_in_dfsdm_channel[2];
-extern DFSDM_Filter_HandleTypeDef  haudio_in_dfsdm_filter[2];
+DFSDM_Filter_HandleTypeDef hdfsdm1_filter0;
+DFSDM_Filter_HandleTypeDef hdfsdm1_filter1;
+DFSDM_Channel_HandleTypeDef hdfsdm1_channel0;
+DFSDM_Channel_HandleTypeDef hdfsdm1_channel1;
+DMA_HandleTypeDef hdma_dfsdm1_flt0;
+DMA_HandleTypeDef hdma_dfsdm1_flt1;
 
 /* Audio in DFSDM internal buffers and global varibales */
 extern int32_t  Audio_DigMic1RecBuff[BSP_AUDIO_IN_DEFAULT_BUFFER_SIZE];

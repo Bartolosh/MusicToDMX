@@ -7,5 +7,5 @@
   * @retval None
   */
 void AUDIO_DFSDM_DMAx_MIC1_IRQHandler(void) {
-    HAL_DMA_IRQHandler(haudio_in_dfsdm_filter[0].hdmaReg);
+    HAL_DMA_IRQHandler(hdfsdm1_filter0.hdmaReg);
 }
