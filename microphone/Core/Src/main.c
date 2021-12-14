@@ -100,7 +100,6 @@ int mic_init(){
 void taskTakeMic(void *pvParameters){
 	while(1){
 		start_recording();
-
 	}
 }
 
@@ -175,7 +174,6 @@ int main(void)
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  sbaccioGay();
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Configure the main internal regulator output voltage
@@ -217,9 +215,7 @@ void SystemClock_Config(void)
   }
 }
 
-void sbaccioGay() {
-	return;
-}
+
 
 /* USER CODE BEGIN 4 */
 
