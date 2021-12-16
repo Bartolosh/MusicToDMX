@@ -3,6 +3,8 @@
 #include <semphr.h>
 #include <stdlib.h>
 
+#include "../manage_output.h"
+
 
 #define SAMPLES 2048
 
@@ -26,6 +28,14 @@ void taskInputRecording(void *pvParameters){
         Serial.println("BUFFER FULL");
         xSemaphoreGive(mtxToBuffer);
         
+    }
+}
+
+// TODO check if the sample frequency is correct
+void taskSendingOutput(void *pvParameters){
+    while(true){
+        int bpm = (int)pvParameters; //TODO control if out while, and if dmx work
+        send_output(bpm);
     }
 }
 
