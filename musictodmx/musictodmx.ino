@@ -12,6 +12,8 @@ SemaphoreHandle_t mtxToBuffer;
 
 float *buffer;
 
+int16_t bpm;
+
 // TODO check if the sample frequency is correct
 void taskInputRecording(void *pvParameters){
     while(true){
@@ -34,7 +36,7 @@ void taskInputRecording(void *pvParameters){
 // TODO check if the sample frequency is correct
 void taskSendingOutput(void *pvParameters){
     while(true){
-        int bpm = (int)pvParameters; //TODO control if out while, and if dmx work
+        bpm = (int)pvParameters; //TODO control if out while, and if dmx work
         send_output(bpm);
     }
 }
@@ -46,7 +48,9 @@ void setup(){
     mtxToBuffer = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
     xSemaphoreGive(mtxToBuffer);
 
-    xTaskCreate(taskInputRecording, "inputRec", 115, NULL, 0, NULL); 
+    xTaskCreate(taskInputRecording, "inputRec", 115, NULL, 0, NULL);
+    //ELABORATION TASK 
+    xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 0, NULL); 
 
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
