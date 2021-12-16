@@ -2,18 +2,20 @@
 #include <timers.h>
 #include <semphr.h>
 #include <stdlib.h>
+#include "arduinoFFT.h"
 
+#include "get_bpm.h"
 
 #define SAMPLES 2048
 
-SemaphoreHandle_t mtxToBuffer;
+SemaphoreHandle_t buffer_mtx;
 
 float *buffer;
 
 // TODO check if the sample frequency is correct
 void taskInputRecording(void *pvParameters){
     while(true){
-        xSemaphoreTake(mtxToBuffer, portMAX_DELAY);
+        xSemaphoreTake(buffer_mtx, portMAX_DELAY);
         uint16_t c = 0;
         while(c < SAMPLES){
             buffer[c] = (float)analogRead(A0);
@@ -24,20 +26,40 @@ void taskInputRecording(void *pvParameters){
             c++;
         }
         Serial.println("BUFFER FULL");
-        xSemaphoreGive(mtxToBuffer);
+        xSemaphoreGive(buffer_mtx);
         
     }
 }
 
+void taskInputProcessing(void *pvParameters){
+     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
+     float *buffer_im[SAMPLES];
+    arduinoFFT FFT = arduinoFFT();
+    FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
+    FFT.Compute(buffer,buffer_im,FFT_FORWARD);
+    FFT.ComplexToMagnitude(buffer,buffer_im,SAMPLES);
+    
+    //TODO: need to fine tune the third param
+    double peak = FFT.MajorPeak(buffer,SAMPLES,5000);
+    Serial.println('Spectrum values:');
+    Serial.print('[');
+    for(int i = 0 ; i < SAMPLES; i++){
+        Serial.print(buffer[i]);
+        Serial.print(',');
+    }
+    Serial.println(']');
+    xSemaphoreGive(buffer_mtx);
+}
 
 void setup(){
     Serial.begin(115200);
     buffer = (float*)calloc(SAMPLES,sizeof(float));
-    mtxToBuffer = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
-    xSemaphoreGive(mtxToBuffer);
+    buffer_mtx = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
+    xSemaphoreGive(buffer_mtx);
 
     xTaskCreate(taskInputRecording, "inputRec", 115, NULL, 0, NULL); 
-
+    xTaskCreate(taskInputProcessing, "inputProc", 115, NULL, 0, NULL);
+    
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
 }
