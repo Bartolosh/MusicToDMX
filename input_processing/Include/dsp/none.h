@@ -37,7 +37,7 @@ of intrinsics.
 #ifndef _NONE_H_
 #define _NONE_H_
 
-#include "arm_math_types.h"
+#include "../arm_math_types.h"
 
 #ifdef   __cplusplus
 extern "C"
@@ -242,7 +242,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined QADD8
    */
-  __STATIC_FORCEINLINE uint32_t __QADD8(
+  __STATIC_FORCEINLINE uint32_t __QADD8_old(
   uint32_t x,
   uint32_t y)
   {
@@ -260,7 +260,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined QSUB8
    */
-  __STATIC_FORCEINLINE uint32_t __QSUB8(
+  __STATIC_FORCEINLINE uint32_t __QSUB8_old(
   uint32_t x,
   uint32_t y)
   {
@@ -278,7 +278,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined QADD16
    */
-  __STATIC_FORCEINLINE uint32_t __QADD16(
+  __STATIC_FORCEINLINE uint32_t __QADD16_old(
   uint32_t x,
   uint32_t y)
   {
@@ -295,7 +295,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SHADD16
    */
-  __STATIC_FORCEINLINE uint32_t __SHADD16(
+  __STATIC_FORCEINLINE uint32_t __SHADD16_old(
   uint32_t x,
   uint32_t y)
   {
@@ -311,7 +311,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined QSUB16
    */
-  __STATIC_FORCEINLINE uint32_t __QSUB16(
+  __STATIC_FORCEINLINE uint32_t __QSUB16_old(
   uint32_t x,
   uint32_t y)
   {
@@ -327,7 +327,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SHSUB16
    */
-  __STATIC_FORCEINLINE uint32_t __SHSUB16(
+  __STATIC_FORCEINLINE uint32_t __SHSUB16_old(
   uint32_t x,
   uint32_t y)
   {
@@ -343,7 +343,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined QASX
    */
-  __STATIC_FORCEINLINE uint32_t __QASX(
+  __STATIC_FORCEINLINE uint32_t __QASX_old(
   uint32_t x,
   uint32_t y)
   {
@@ -359,7 +359,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SHASX
    */
-  __STATIC_FORCEINLINE uint32_t __SHASX(
+  __STATIC_FORCEINLINE uint32_t __SHASX_old(
   uint32_t x,
   uint32_t y)
   {
@@ -375,7 +375,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined QSAX
    */
-  __STATIC_FORCEINLINE uint32_t __QSAX(
+  __STATIC_FORCEINLINE uint32_t __QSAX_old(
   uint32_t x,
   uint32_t y)
   {
@@ -391,7 +391,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SHSAX
    */
-  __STATIC_FORCEINLINE uint32_t __SHSAX(
+  __STATIC_FORCEINLINE uint32_t __SHSAX_old(
   uint32_t x,
   uint32_t y)
   {
@@ -407,7 +407,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SMUSDX
    */
-  __STATIC_FORCEINLINE uint32_t __SMUSDX(
+  __STATIC_FORCEINLINE uint32_t __SMUSDX_old(
   uint32_t x,
   uint32_t y)
   {
@@ -418,7 +418,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SMUADX
    */
-  __STATIC_FORCEINLINE uint32_t __SMUADX(
+  __STATIC_FORCEINLINE uint32_t __SMUADX_old(
   uint32_t x,
   uint32_t y)
   {
@@ -430,7 +430,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined QADD
    */
-  __STATIC_FORCEINLINE int32_t __QADD(
+  __STATIC_FORCEINLINE int32_t __QADD_old(
   int32_t x,
   int32_t y)
   {
@@ -441,7 +441,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined QSUB
    */
-  __STATIC_FORCEINLINE int32_t __QSUB(
+  __STATIC_FORCEINLINE int32_t __QSUB_old(
   int32_t x,
   int32_t y)
   {
@@ -452,7 +452,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SMLAD
    */
-  __STATIC_FORCEINLINE uint32_t __SMLAD(
+  __STATIC_FORCEINLINE uint32_t __SMLAD_old(
   uint32_t x,
   uint32_t y,
   uint32_t sum)
@@ -466,7 +466,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SMLADX
    */
-  __STATIC_FORCEINLINE uint32_t __SMLADX(
+  __STATIC_FORCEINLINE uint32_t __SMLADX_old(
   uint32_t x,
   uint32_t y,
   uint32_t sum)
@@ -480,7 +480,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SMLSDX
    */
-  __STATIC_FORCEINLINE uint32_t __SMLSDX(
+  __STATIC_FORCEINLINE uint32_t __SMLSDX_old(
   uint32_t x,
   uint32_t y,
   uint32_t sum)
@@ -494,7 +494,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SMLALD
    */
-  __STATIC_FORCEINLINE uint64_t __SMLALD(
+  __STATIC_FORCEINLINE uint64_t __SMLALD_old(
   uint32_t x,
   uint32_t y,
   uint64_t sum)
@@ -509,7 +509,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SMLALDX
    */
-  __STATIC_FORCEINLINE uint64_t __SMLALDX(
+  __STATIC_FORCEINLINE uint64_t __SMLALDX_old(
   uint32_t x,
   uint32_t y,
   uint64_t sum)
@@ -524,7 +524,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SMUAD
    */
-  __STATIC_FORCEINLINE uint32_t __SMUAD(
+  __STATIC_FORCEINLINE uint32_t __SMUAD_old(
   uint32_t x,
   uint32_t y)
   {
@@ -536,7 +536,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SMUSD
    */
-  __STATIC_FORCEINLINE uint32_t __SMUSD(
+  __STATIC_FORCEINLINE uint32_t __SMUSD_old(
   uint32_t x,
   uint32_t y)
   {
@@ -548,7 +548,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SXTB16
    */
-  __STATIC_FORCEINLINE uint32_t __SXTB16(
+  __STATIC_FORCEINLINE uint32_t __SXTB16_old(
   uint32_t x)
   {
     return ((uint32_t)(((((q31_t)x << 24) >> 24) & (q31_t)0x0000FFFF) |
@@ -558,7 +558,7 @@ __STATIC_FORCEINLINE uint32_t __ROR(uint32_t op1, uint32_t op2)
   /*
    * @brief C custom defined SMMLA
    */
-  __STATIC_FORCEINLINE int32_t __SMMLA(
+  __STATIC_FORCEINLINE int32_t __SMMLA_old(
   int32_t x,
   int32_t y,
   int32_t sum)

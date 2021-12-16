@@ -27,12 +27,12 @@
 #ifndef _SVM_FUNCTIONS_F16_H_
 #define _SVM_FUNCTIONS_F16_H_
 
-#include "arm_math_types_f16.h"
-#include "arm_math_memory.h"
+#include "../arm_math_types_f16.h"
+#include "../arm_math_memory.h"
 
-#include "dsp/none.h"
-#include "dsp/utils.h"
-#include "dsp/svm_defines.h"
+#include "none.h"
+#include "utils.h"
+#include "svm_defines.h"
 
 
 #ifdef   __cplusplus

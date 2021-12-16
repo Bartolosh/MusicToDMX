@@ -1,6 +1,7 @@
-#include "arm_math.h"
-#include "arm_const_struct.h"
+#include "./Include/arm_math.h"
+#include "./Include/arm_const_structs.h"
 #include <stdio.h>
+#include <stdint.h>
 
 #define SAMPLES 2048
 
@@ -20,7 +21,7 @@ int32_t main(void){
     status = arm_cfft_init_f32(&fft_f32_instance,fft_n_bins);
 
     // Process data through CFFT module
-    arm_cfft_f32(&fft_f32_instance,input_f32_10khz,ifft_flag,do_bit_reverse)
+    arm_cfft_f32(&fft_f32_instance,input_f32_10khz,ifft_flag,do_bit_reverse);
     
     // Calculating magnitude at each bin
     arm_cmplx_mag_f32(input_f32_10khz,output,fft_n_bins);

@@ -27,14 +27,14 @@
 #ifndef _STATISTICS_FUNCTIONS_F16_H_
 #define _STATISTICS_FUNCTIONS_F16_H_
 
-#include "arm_math_types_f16.h"
-#include "arm_math_memory.h"
+#include "../arm_math_types_f16.h"
+#include "../arm_math_memory.h"
 
-#include "dsp/none.h"
-#include "dsp/utils.h"
+#include "none.h"
+#include "utils.h"
 
-#include "dsp/basic_math_functions_f16.h"
-#include "dsp/fast_math_functions_f16.h"
+#include "basic_math_functions_f16.h"
+#include "fast_math_functions_f16.h"
 
 #ifdef   __cplusplus
 extern "C"

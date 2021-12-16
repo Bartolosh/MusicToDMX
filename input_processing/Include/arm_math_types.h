@@ -72,7 +72,7 @@ extern "C"
 #define __STATIC_INLINE static inline
 
 #else
-#include "cmsis_compiler.h"
+#include "../../CMSIS_5/CMSIS/Core_A/Include/cmsis_compiler.h"
 #endif
 
 

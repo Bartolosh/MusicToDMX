@@ -27,13 +27,13 @@
 #ifndef _BAYES_FUNCTIONS_H_
 #define _BAYES_FUNCTIONS_H_
 
-#include "arm_math_types.h"
-#include "arm_math_memory.h"
+#include "../arm_math_types.h"
+#include "../arm_math_memory.h"
 
-#include "dsp/none.h"
-#include "dsp/utils.h"
+#include "none.h"
+#include "utils.h"
 
-#include "dsp/statistics_functions.h"
+#include "statistics_functions.h"
 
 /**
  * @defgroup groupBayes Bayesian estimators
@@ -43,7 +43,7 @@
  *
  * The parameters can be easily
  * generated from the scikit-learn object. Some examples are given in
- * DSP/Testing/PatternGeneration/Bayes.py
+ * Testing/PatternGeneration/Bayes.py
  */
 
 #ifdef   __cplusplus

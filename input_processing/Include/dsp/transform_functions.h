@@ -27,14 +27,14 @@
 #ifndef _TRANSFORM_FUNCTIONS_H_
 #define _TRANSFORM_FUNCTIONS_H_
 
-#include "arm_math_types.h"
-#include "arm_math_memory.h"
+#include "../arm_math_types.h"
+#include "../arm_math_memory.h"
 
-#include "dsp/none.h"
-#include "dsp/utils.h"
+#include "none.h"
+#include "utils.h"
 
-#include "dsp/basic_math_functions.h"
-#include "dsp/complex_math_functions.h"
+#include "basic_math_functions.h"
+#include "complex_math_functions.h"
 
 #ifdef   __cplusplus
 extern "C"
