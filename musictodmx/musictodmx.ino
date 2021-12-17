@@ -33,7 +33,7 @@ void taskInputRecording(void *pvParameters){
     }
 }
 
-// TODO check if the sample frequency is correct
+// TODO check if the refresh frequency is correct, if send packet with 512 ch--> 44Hz, 23ms to send a packet
 void taskSendingOutput(void *pvParameters){
     while(true){
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
@@ -70,6 +70,8 @@ void loop(){
     if (xSemaphoreTake(mtxLEDState, (TickType_t)5) == pdTRUE) {}
 
     xTaskCreate(taskReadIMU, "readIMU", 115, NULL, 0, NULL); 
+
+    xTaskCreate(pointer to entry function, name, word allocated stack, void* parameters, priority, handle for task created)
 
     xSemaphoreTake(semReadFlex, portMAX_DELAY);
 
