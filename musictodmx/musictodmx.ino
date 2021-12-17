@@ -2,25 +2,27 @@
 #include <timers.h>
 #include <semphr.h>
 #include <stdlib.h>
+#include "arduinoFFT.h"
 
 #include "../manage_output.h"
 
 
 #define SAMPLES 2048
 
-SemaphoreHandle_t mtxToBuffer;
+SemaphoreHandle_t buffer_mtx;
 
-float *buffer;
+double *buffer;
+arduinoFFT FFT = arduinoFFT();
 
 int16_t bpm;
 
 // TODO check if the sample frequency is correct
 void taskInputRecording(void *pvParameters){
     while(true){
-        xSemaphoreTake(mtxToBuffer, portMAX_DELAY);
+        xSemaphoreTake(buffer_mtx, portMAX_DELAY);
         uint16_t c = 0;
         while(c < SAMPLES){
-            buffer[c] = (float)analogRead(A0);
+            buffer[c] = (double)analogRead(A0);
             Serial.print("READ  ");
             Serial.print(c);
             Serial.print(": ");
@@ -28,11 +30,29 @@ void taskInputRecording(void *pvParameters){
             c++;
         }
         Serial.println("BUFFER FULL");
-        xSemaphoreGive(mtxToBuffer);
+        xSemaphoreGive(buffer_mtx);
         
     }
 }
 
+void taskInputProcessing(void *pvParameters){
+    xSemaphoreTake(buffer_mtx, portMAX_DELAY);
+    double buffer_im[SAMPLES] = {};
+    FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
+    FFT.Compute(buffer,buffer_im,SAMPLES, FFT_FORWARD);
+    FFT.ComplexToMagnitude(buffer,buffer_im,SAMPLES);
+    
+    //TODO: need to fine tune the third param
+    double peak = FFT.MajorPeak(buffer,SAMPLES,5000);
+    Serial.println('Spectrum values:');
+    Serial.print('[');
+    for(int i = 0 ; i < SAMPLES; i++){
+        Serial.print(buffer[i]);
+        Serial.print(',');
+    }
+    Serial.println(']');
+    xSemaphoreGive(buffer_mtx);
+}
 // TODO check if the refresh frequency is correct, if send packet with 512 ch--> 44Hz, 23ms to send a packet
 void taskSendingOutput(void *pvParameters){
     while(true){
@@ -44,11 +64,12 @@ void taskSendingOutput(void *pvParameters){
 
 void setup(){
     Serial.begin(115200);
-    buffer = (float*)calloc(SAMPLES,sizeof(float));
-    mtxToBuffer = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
-    xSemaphoreGive(mtxToBuffer);
+    buffer = (double*)calloc(SAMPLES,sizeof(double));
+    buffer_mtx = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
+    xSemaphoreGive(buffer_mtx);
 
-    xTaskCreate(taskInputRecording, "inputRec", 115, NULL, 0, NULL);
+    xTaskCreate(taskInputRecording, "inputRec", 115, NULL, 0, NULL); 
+    xTaskCreate(taskInputProcessing, "inputProc", 115, NULL, 0, NULL);
     //ELABORATION TASK 
     xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 0, NULL); 
 
