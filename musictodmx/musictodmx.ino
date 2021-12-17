@@ -13,7 +13,7 @@ SemaphoreHandle_t buffer_mtx;
 
 double *buffer;
 double max_peak = 0;
-char counter = 0;
+int counter = 0;
 arduinoFFT FFT = arduinoFFT();
 
 int16_t bpm;
@@ -38,11 +38,21 @@ void taskInputRecording(void *pvParameters){
 }
 
 void taskInputProcessing(void *pvParameters){
+  while(true){
+    Serial.println("PROCESSING TASK");
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-    double buffer_im[SAMPLES] = {};
+    Serial.println("HO PRESO IL SEMAFORO FRA");
+    double buffer_im[SAMPLES];
+        Serial.println("HO PRESO IL SEMAFORO FRA 2");
+
     FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
+    Serial.println("HO PRESO IL SEMAFORO FRA 3");
+
     FFT.Compute(buffer,buffer_im,SAMPLES, FFT_FORWARD);
+    Serial.println("HO PRESO IL SEMAFORO FRA 4");
+
     FFT.ComplexToMagnitude(buffer,buffer_im,SAMPLES);
+    Serial.println("HO PRESO IL SEMAFORO FRA 5");
     
     //TODO: need to fine tune the third param
     double peak = FFT.MajorPeak(buffer,SAMPLES,5000);
@@ -51,18 +61,19 @@ void taskInputProcessing(void *pvParameters){
         counter = 0;
     }
     counter++;
-    Serial.print('Peak value: ');
+    Serial.print("Peak value: ");
     Serial.println(max_peak);
-    Serial.print('Counter peak: ');
+    Serial.print("Counter peak: ");
     Serial.println(counter);
-    Serial.println('Spectrum values:');
-    Serial.print('[');
+    Serial.println("Spectrum values:");
+    Serial.print("[");
     for(int i = 0 ; i < SAMPLES; i++){
         Serial.print(buffer[i]);
-        Serial.print(',');
+        Serial.print(",");
     }
-    Serial.println(']');
+    Serial.println("]");
     xSemaphoreGive(buffer_mtx);
+  }
 }
 // TODO check if the refresh frequency is correct, if send packet with 512 ch--> 44Hz, 23ms to send a packet
 void taskSendingOutput(void *pvParameters){
@@ -79,10 +90,10 @@ void setup(){
     buffer_mtx = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
     xSemaphoreGive(buffer_mtx);
 
-    xTaskCreate(taskInputRecording, "inputRec", 115, NULL, 0, NULL); 
-    //xTaskCreate(taskInputProcessing, "inputProc", 115, NULL, 0, NULL);
+    xTaskCreate(taskInputRecording, "inputRec", 8000, NULL, 0, NULL); 
+    xTaskCreate(taskInputProcessing, "inputProc", 8000, NULL, 0, NULL);
     //ELABORATION TASK 
-    xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 0, NULL); 
+    //xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 0, NULL); 
 
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
