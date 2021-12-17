@@ -4,13 +4,12 @@
 #include <stdlib.h>
 #include "arduinoFFT.h"
 
-#include "get_bpm.h"
-
 #define SAMPLES 2048
 
 SemaphoreHandle_t buffer_mtx;
 
-float *buffer;
+double *buffer;
+arduinoFFT FFT = arduinoFFT();
 
 // TODO check if the sample frequency is correct
 void taskInputRecording(void *pvParameters){
@@ -18,7 +17,7 @@ void taskInputRecording(void *pvParameters){
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
         uint16_t c = 0;
         while(c < SAMPLES){
-            buffer[c] = (float)analogRead(A0);
+            buffer[c] = (double)analogRead(A0);
             Serial.print("READ  ");
             Serial.print(c);
             Serial.print(": ");
@@ -32,11 +31,10 @@ void taskInputRecording(void *pvParameters){
 }
 
 void taskInputProcessing(void *pvParameters){
-     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-     float *buffer_im[SAMPLES];
-    arduinoFFT FFT = arduinoFFT();
+    xSemaphoreTake(buffer_mtx, portMAX_DELAY);
+    double buffer_im[SAMPLES] = {};
     FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
-    FFT.Compute(buffer,buffer_im,FFT_FORWARD);
+    FFT.Compute(buffer,buffer_im,SAMPLES, FFT_FORWARD);
     FFT.ComplexToMagnitude(buffer,buffer_im,SAMPLES);
     
     //TODO: need to fine tune the third param
@@ -53,7 +51,7 @@ void taskInputProcessing(void *pvParameters){
 
 void setup(){
     Serial.begin(115200);
-    buffer = (float*)calloc(SAMPLES,sizeof(float));
+    buffer = (double*)calloc(SAMPLES,sizeof(double));
     buffer_mtx = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
     xSemaphoreGive(buffer_mtx);
 
