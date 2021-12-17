@@ -4,12 +4,17 @@
 #include <stdlib.h>
 #include "arduinoFFT.h"
 
+#include "../manage_output.h"
+
+
 #define SAMPLES 2048
 
 SemaphoreHandle_t buffer_mtx;
 
 double *buffer;
 arduinoFFT FFT = arduinoFFT();
+
+int16_t bpm;
 
 // TODO check if the sample frequency is correct
 void taskInputRecording(void *pvParameters){
@@ -48,6 +53,14 @@ void taskInputProcessing(void *pvParameters){
     Serial.println(']');
     xSemaphoreGive(buffer_mtx);
 }
+// TODO check if the refresh frequency is correct, if send packet with 512 ch--> 44Hz, 23ms to send a packet
+void taskSendingOutput(void *pvParameters){
+    while(true){
+        bpm = (int)pvParameters; //TODO control if out while, and if dmx work
+        send_output(bpm);
+    }
+}
+
 
 void setup(){
     Serial.begin(115200);
@@ -57,7 +70,9 @@ void setup(){
 
     xTaskCreate(taskInputRecording, "inputRec", 115, NULL, 0, NULL); 
     xTaskCreate(taskInputProcessing, "inputProc", 115, NULL, 0, NULL);
-    
+    //ELABORATION TASK 
+    xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 0, NULL); 
+
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
 }
@@ -76,6 +91,8 @@ void loop(){
     if (xSemaphoreTake(mtxLEDState, (TickType_t)5) == pdTRUE) {}
 
     xTaskCreate(taskReadIMU, "readIMU", 115, NULL, 0, NULL); 
+
+    xTaskCreate(pointer to entry function, name, word allocated stack, void* parameters, priority, handle for task created)
 
     xSemaphoreTake(semReadFlex, portMAX_DELAY);
 

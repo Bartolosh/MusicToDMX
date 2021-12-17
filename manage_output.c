@@ -1,8 +1,4 @@
-#include "./fixture/eurolite_par.h"
-#include "./fixture/moving_head.h"
-
-#include <stdlib.h>
-#include <DmxSimple.h>
+#include "./manage_output.h"
 
 void send_output(int speed){
     eurolite_par par1;
