@@ -12,6 +12,8 @@
 SemaphoreHandle_t buffer_mtx;
 
 double *buffer;
+double max_peak = 0;
+char counter = 0;
 arduinoFFT FFT = arduinoFFT();
 
 int16_t bpm;
@@ -44,6 +46,15 @@ void taskInputProcessing(void *pvParameters){
     
     //TODO: need to fine tune the third param
     double peak = FFT.MajorPeak(buffer,SAMPLES,5000);
+    if (peak > max_peak){
+        max_peak = peak;
+        counter = 0;
+    }
+    counter++;
+    Serial.print('Peak value: ');
+    Serial.println(max_peak);
+    Serial.print('Counter peak: ');
+    Serial.println(counter);
     Serial.println('Spectrum values:');
     Serial.print('[');
     for(int i = 0 ; i < SAMPLES; i++){
