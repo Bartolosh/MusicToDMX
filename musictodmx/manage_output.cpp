@@ -15,7 +15,11 @@ void send_output(int speed){
     init_movinghead(&mov1, 19);
     init_movinghead(&mov2, 41);
 
-    DmxSimple.maxChannel(70);
+    //DmxSimple.maxChannel(70);
+
+    if (!DMX.begin(70)) {
+        return ;
+    }
 
     int color = rand() %6 +1;
 

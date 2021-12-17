@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "arduinoFFT.h"
 
-#include "../manage_output.h"
+#include "manage_output.h"
 
 
 #define SAMPLES 2048
@@ -69,7 +69,7 @@ void setup(){
     xSemaphoreGive(buffer_mtx);
 
     xTaskCreate(taskInputRecording, "inputRec", 115, NULL, 0, NULL); 
-    xTaskCreate(taskInputProcessing, "inputProc", 115, NULL, 0, NULL);
+    //xTaskCreate(taskInputProcessing, "inputProc", 115, NULL, 0, NULL);
     //ELABORATION TASK 
     xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 0, NULL); 
 
