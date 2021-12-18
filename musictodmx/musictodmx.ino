@@ -20,9 +20,9 @@ int16_t bpm;
 
 // TODO check if the sample frequency is correct
 void taskInputRecording(void *pvParameters){
+    uint16_t c = 0;
     while(true){
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-        uint16_t c = 0;
         while(c < SAMPLES){
             buffer[c] = (double)analogRead(A0);
             Serial.print("READ  ");
@@ -38,13 +38,11 @@ void taskInputRecording(void *pvParameters){
 }
 
 void taskInputProcessing(void *pvParameters){
+  double buffer_im[SAMPLES];
   while(true){
     Serial.println("PROCESSING TASK");
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     Serial.println("HO PRESO IL SEMAFORO FRA");
-    double buffer_im[SAMPLES];
-        Serial.println("HO PRESO IL SEMAFORO FRA 2");
-
     FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
     Serial.println("HO PRESO IL SEMAFORO FRA 3");
 
@@ -83,6 +81,25 @@ void taskSendingOutput(void *pvParameters){
     }
 }
 
+void taskValuate(TimerHandle_t xTimer){
+
+
+    Serial.print("inputRec " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
+
+
+    //Serial.print("inputProc " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputProc"))));
+
+
+    unsigned long startTime = 0;
+    unsigned long finishTime = 0;
+    unsigned long maxTime = 0;
+    startTime = micros();
+    finishTime = micros();
+    maxTime = max(finishTime - startTime, maxTime);
+    Serial.print(maxTime);
+    Serial.print("    ");
+    Serial.println(finishTime - startTime);
+}
 
 void setup(){
     Serial.begin(115200);
@@ -94,6 +111,9 @@ void setup(){
     xTaskCreate(taskInputProcessing, "inputProc", 8000, NULL, 0, NULL);
     //ELABORATION TASK 
     //xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 0, NULL); 
+
+    TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 0, taskValuate);
+    xTimerStart(xTimer, 0);   
 
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
