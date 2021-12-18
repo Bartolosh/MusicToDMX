@@ -10,6 +10,7 @@
 #define SAMPLES 2048
 
 SemaphoreHandle_t buffer_mtx;
+SemaphoreHandle_t new_data_mtx;
 
 double *buffer;
 double max_peak = 0;
@@ -32,6 +33,9 @@ void taskInputRecording(void *pvParameters){
             c++;
         }
         Serial.println("BUFFER FULL");
+        if(uxSemaphoreGetCount(new_data_mtx) == 0){
+            xSemaphoreGive(new_data_mtx);
+        }
         xSemaphoreGive(buffer_mtx);
         
     }
@@ -40,6 +44,7 @@ void taskInputRecording(void *pvParameters){
 void taskInputProcessing(void *pvParameters){
   double buffer_im[SAMPLES];
   while(true){
+    xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     Serial.println("PROCESSING TASK");
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     Serial.println("HO PRESO IL SEMAFORO FRA");
@@ -105,7 +110,9 @@ void setup(){
     Serial.begin(115200);
     buffer = (double*)calloc(SAMPLES,sizeof(double));
     buffer_mtx = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
-    xSemaphoreGive(buffer_mtx);
+    xSemaphoreGive(buffer_mtx); //NOW ALL SEMAPHORE LOCK FOREVER CONTROL IF USEFUL
+
+    new_data_mtx = xSemaphoreCreateBinary();
 
     xTaskCreate(taskInputRecording, "inputRec", 8000, NULL, 0, NULL); 
     xTaskCreate(taskInputProcessing, "inputProc", 8000, NULL, 0, NULL);
