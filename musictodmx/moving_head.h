@@ -19,6 +19,18 @@
 #define UP1     5
 #define DOWN2   6
 
+#define RED_VALUE       35
+#define ORANGE_VALUE    50
+#define WHITE_VALUE     0
+#define BLUE_VALUE      70
+#define GREEN_VALUE     90
+#define YELLOW_VALUE    110
+#define VIOLET_VALUE    125
+#define LIGHTBLUE_VALUE 175
+#define LIGHTGREEN_VALUE 140
+#define PINK_VALUE      160
+#define ROTATION_COLOR  220
+
 typedef struct{
     int start_address;
     int ch_color;
