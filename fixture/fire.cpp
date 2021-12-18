@@ -17,3 +17,13 @@ void fogSelector() {
   pinMode(FIRE_BUTTON_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(FIRE_BUTTON_PIN), taskFireHandler, FALLING);
 }
+
+
+void fireStart(){
+    DMX.beginTransmission();
+    DMX.write(channel, 255);
+    DMX.endTransmission();
+    DMX.beginTransmission();
+    DMX.write(channel, 0);
+    DMX.endTransmission();
+}

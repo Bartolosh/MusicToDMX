@@ -86,6 +86,33 @@ void taskSendingOutput(void *pvParameters){
     }
 }
 
+
+/*-------------------- ASYNC TASK ------------------------*/
+void taskFog(void *pvParameters) {
+    /* Block for DURATION. */
+ const TickType_t xDelay = FOG_DURATION_TIME / portTICK_PERIOD_MS;
+  while (true) {
+    vTaskSuspend(NULL);                                                 /* suspends itself */
+
+    fogStart();
+    vTaskDelay( xDelay );
+    fogStop();
+
+  }
+}
+
+
+void taskFire(void *pvParameters) {
+  while (true) {
+    vTaskSuspend(NULL);                                                 /* suspends itself */
+    
+    fireStart();
+    
+  }
+}
+
+/*-------------------- VALUATING TASK --------------------*/
+
 void taskValuate(TimerHandle_t xTimer){
 
 
