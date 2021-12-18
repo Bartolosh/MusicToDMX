@@ -15,7 +15,7 @@ void fogHandler(void) {
 
 void fogSelector() {
   pinMode(FOG_BUTTON_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(FOG_BUTTON_PIN), taskFogHandler, FALLING);
+  attachInterrupt(digitalPinToInterrupt(FOG_BUTTON_PIN), fogHandler, FALLING);
 }
 
 void fogStart(){

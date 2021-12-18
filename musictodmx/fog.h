@@ -17,4 +17,4 @@ extern void fogSelector();
 extern void fogStart();
 extern void fogStop();
 
-#endif
+#endif#endif

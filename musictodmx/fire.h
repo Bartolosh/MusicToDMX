@@ -1,7 +1,7 @@
 #ifndef FIRECONTROLLER_H
 #define FIRECONTROLLER_H
 
-#include <arduino.h>
+#include <Arduino.h>
 #include <STM32FreeRTOS.h>
 #include <ArduinoRS485.h> // the ArduinoDMX library depends on ArduinoRS485
 #include <ArduinoDMX.h>

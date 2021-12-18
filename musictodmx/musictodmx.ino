@@ -3,12 +3,12 @@
 #include <semphr.h>
 #include <stdlib.h>
 #include "arduinoFFT.h"
-
+#include "task.h"
 #include "manage_output.h"
 
 
 #define SAMPLES 2048
-
+#define FRAME_LENGTH 22
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
 
@@ -21,6 +21,7 @@ int16_t bpm;
 
 // TODO check if the sample frequency is correct
 void taskInputRecording(void *pvParameters){
+    Serial.print("readIMU" + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
     uint16_t c = 0;
     while(true){
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
@@ -36,6 +37,8 @@ void taskInputRecording(void *pvParameters){
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
             xSemaphoreGive(new_data_mtx);
         }
+        Serial.print("readIMU end task" + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
+
         xSemaphoreGive(buffer_mtx);
         
     }
@@ -82,10 +85,9 @@ void taskInputProcessing(void *pvParameters){
 void taskSendingOutput(void *pvParameters){
     while(true){
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
-        send_output(bpm);
+        //send_output(bpm);
     }
 }
-
 
 /*-------------------- ASYNC TASK ------------------------*/
 void taskFog(void *pvParameters) {
