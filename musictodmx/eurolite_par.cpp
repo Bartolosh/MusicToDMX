@@ -9,7 +9,7 @@ void init_eurolitepar(eurolite_par *par, int start_address){
     par->ch_strobe = start_address+5;
 }
 
-void change_color(eurolite_par par,int color){
+void change_color(eurolite_par par,uint8_t color){
     switch(color){
         case RED:
             DMX.write(par.ch_red, 255);
@@ -45,12 +45,12 @@ void change_color(eurolite_par par,int color){
 
     DMX.write(par.ch_dimmer, 255);
 }
-void strobe_par(eurolite_par par, int speed, int color){
+void strobe_par(eurolite_par par, uint8_t speed, uint8_t color){
     change_color(par, color);
     map(speed,0,255,0,200); //da controllare massimo valore prima del random
     DMX.write(par.ch_strobe, speed);
 }
 void rainbow(eurolite_par par){
-    int color = rand() %6 +1; //generate a random number from 1 to 6
+    uint8_t color = rand() %6 +1; //generate a random number from 1 to 6
     change_color(par, color);
 }

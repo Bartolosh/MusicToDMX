@@ -28,9 +28,9 @@ void init_fixture(){
 
 }
 
-void send_output(uint8_t speed){
+void send_output(int speed){
 
-    uint8_t color = rand() %6 +1;
+    int color = rand() %6 +1;
 
     int mov = rand() %2;
 

@@ -15,6 +15,6 @@ moving_head mov1;
 moving_head mov2; //todo control address
 
 
-void send_output(uint8_t speed);
+void send_output(int speed);
 
 void init_fixture();

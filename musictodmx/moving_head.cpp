@@ -10,7 +10,7 @@ void init_movinghead(moving_head *head, int start_address){
     head->ch_speed = start_address + 4;
 }
 
-void set_color(moving_head head,int color){
+void set_color(moving_head head,uint8_t color){
     switch(color){
         case RED:
             DMX.write(head.ch_color, RED_VALUE);
@@ -36,7 +36,7 @@ void set_color(moving_head head,int color){
     DMX.write(head.ch_dimmer, 255);
 }
 
-void rotate(moving_head *head, int speed, int color){
+void rotate(moving_head *head, uint8_t speed, uint8_t color){
     set_color(*head, color);
     //DmxSimple.write(head->ch_speed, speed);
 
@@ -70,13 +70,13 @@ void rotate(moving_head *head, int speed, int color){
     }
 }
 
-void strobe_head(moving_head head, int speed, int color){
+void strobe_head(moving_head head, uint8_t speed, uint8_t color){
     set_color(head, color);
     map(speed, 0, 255, 0, 128); //Controllare velocità strobe
     DMX.write(head.ch_strobe, speed);
 }
 
-void up_down(moving_head *head, int color, int speed){
+void up_down(moving_head *head, uint8_t color, uint8_t speed){
     set_color(*head, color);
 
     DMX.write(head->ch_speed, speed);

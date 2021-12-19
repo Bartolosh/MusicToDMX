@@ -1,8 +1,8 @@
 #include "fog.h"
 
-uint8_t fog_channel = 0;
+uint16_t fog_channel = 0;
 
-void init_fog(uint8_t ch){
+void init_fog(uint16_t ch){
     fog_channel = ch;
 }
 

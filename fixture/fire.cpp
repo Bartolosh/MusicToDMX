@@ -1,7 +1,9 @@
 #include "fire.h"
 
+uint8_t fire_channel = 0;
+
 void init_fire(uint8_t ch){
-    channel = ch;
+    fire_channel = ch;
 }
 
 TaskHandle_t taskFireHandle = NULL;
@@ -13,17 +15,17 @@ void fireHandler(void) {
   portYIELD_FROM_ISR(xYieldRequired);
 }
 
-void fogSelector() {
+void fireSelector() {
   pinMode(FIRE_BUTTON_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(FIRE_BUTTON_PIN), taskFireHandler, FALLING);
+  attachInterrupt(digitalPinToInterrupt(FIRE_BUTTON_PIN), fireHandler, FALLING);
 }
 
 
 void fireStart(){
     DMX.beginTransmission();
-    DMX.write(channel, 255);
+    DMX.write(fire_channel, 255);
     DMX.endTransmission();
     DMX.beginTransmission();
-    DMX.write(channel, 0);
+    DMX.write(fire_channel, 0);
     DMX.endTransmission();
 }

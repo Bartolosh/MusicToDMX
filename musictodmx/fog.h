@@ -9,10 +9,10 @@
 #define FOG_BUTTON_PIN      13
 #define FOG_DURATION_TIME   2000 //milli seconds
 
-extern uint8_t fog_channel;
+extern uint16_t fog_channel;
 extern TaskHandle_t taskFogHandle;
 
-extern void init_fog(uint8_t channel);
+extern void init_fog(uint16_t channel);
 extern void fogHandler(void);
 extern void fogSelector();
 

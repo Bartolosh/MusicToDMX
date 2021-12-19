@@ -45,12 +45,12 @@ typedef struct{
 
 void init_movinghead(moving_head *head, int start_address);
 
-void set_color(moving_head head,int color);
+void set_color(moving_head head,uint8_t color);
 
-void rotate(moving_head *head, int speed, int color);
+void rotate(moving_head *head, uint8_t speed, uint8_t color);
 
-void strobe_head(moving_head head, int speed, int color);
+void strobe_head(moving_head head, uint8_t speed, uint8_t color);
 
-void up_down(moving_head *head, int color, int speed);
+void up_down(moving_head *head, uint8_t color, uint8_t speed);
 
 #endif

@@ -1,8 +1,8 @@
 #include "fire.h"
 
-uint8_t fire_channel = 0;
+uint16_t fire_channel = 0;
 
-void init_fire(uint8_t ch){
+void init_fire(uint16_t ch){
     fire_channel = ch;
 }
 
