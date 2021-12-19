@@ -1,5 +1,6 @@
 #include "./manage_output.h"
 
+
 eurolite_par par1;
 eurolite_par par2;
 eurolite_par par3;
@@ -10,14 +11,18 @@ moving_head mov2; //todo control address
 
 void init_fixture(){
     
+    init_fire(0);
     init_eurolitepar(&par1, 1);
     init_eurolitepar(&par2, 7);
     init_eurolitepar(&par3, 13);
 
     init_movinghead(&mov1, 19);
-    init_movinghead(&mov2, 41);
+    init_movinghead(&mov2, 37);
 
-    if (!DMX.begin(70)) {
+    init_fog(55);
+    
+
+    if (!DMX.begin(56)) {
         return ;
     }
 

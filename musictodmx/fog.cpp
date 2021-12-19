@@ -1,7 +1,9 @@
 #include "fog.h"
 
+uint8_t fog_channel = 0;
+
 void init_fog(uint8_t ch){
-    channel = ch;
+    fog_channel = ch;
 }
 
 TaskHandle_t taskFogHandle = NULL;
@@ -20,13 +22,13 @@ void fogSelector() {
 
 void fogStart(){
     DMX.beginTransmission();
-    DMX.write(channel, 255);
+    DMX.write(fog_channel, 255);
     DMX.endTransmission();
 }
 
 
 void fogStop(){
     DMX.beginTransmission();
-    DMX.write(channel, 0);
+    DMX.write(fog_channel, 0);
     DMX.endTransmission();
 }
