@@ -12,18 +12,21 @@
 #define FRAME_LENGTH 100
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
-
+SemaphoreHandle_t bpm_mtx;
 double *buffer;
 double max_peak = 0, mean_peak = 0;
 int n = 0;
 arduinoFFT FFT = arduinoFFT();
+unsigned long start;
 
-int16_t bpm;
+//try to set a default value
+int16_t bpm = 120;
 
 // TODO check if the sample frequency is correct
 void taskInputRecording(void *pvParameters){
     //Serial.println("readIMU "+ String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
     uint16_t c = 0;
+    start = micros();
     while(true){
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
         while(c < SAMPLES){
@@ -46,6 +49,7 @@ void taskInputRecording(void *pvParameters){
 void taskInputProcessing(void *pvParameters){
   //TODO: check init values and re-zero everytime this task starts to try to avoid overflow
   double buffer_im[SAMPLES];
+  unsigned long finish;
 
   while(true){
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
@@ -67,10 +71,14 @@ void taskInputProcessing(void *pvParameters){
         max_peak = peak;
         n++;
         mean_peak = mean_peak + (max_peak -  mean_peak)/n;
+        finish = (micros() - start)/1000000;
+        xSemaphoreTake(bpm_mtx,portMAX_DELAY);
+        bpm = n * 60/finish;
+        xSemaphoreGive(bpm_mtx,portMAX_DELAY);
     }
     Serial.println((String)"Peak value: " + max_peak);
   
-    Serial.println((String)"Counter peaks for average: " + n);
+    Serial.println((String)"Counter peaks for average: " + n + "in "+finish+" s");
     
     Serial.println((String)"Mean peak value: " + mean_peak);
     Serial.println("Spectrum values:");
@@ -86,8 +94,11 @@ void taskInputProcessing(void *pvParameters){
 // TODO check if the refresh frequency is correct, if send packet with 512 ch--> 44Hz, 23ms to send a packet
 void taskSendingOutput(void *pvParameters){
     while(true){
+        xSemaphoreTake(bpm_mtx,portMAX_DELAY);
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
         //send_output(bpm);
+        xSemaphoreGive(bpm_mtx,portMAX_DELAY);
+
     }
 }
 
