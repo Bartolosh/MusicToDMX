@@ -43,11 +43,6 @@ void taskInputRecording(void *pvParameters){
         //Serial.println("readIMU end task " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
 
         xSemaphoreGive(buffer_mtx);
-        MPLES){
-            buffer[c] = (double)analogRead(A0);
-            //Serial.print("READ  ");
-            //Serial.print(c);
-            //Serial.print
     }
 }
 
@@ -72,14 +67,13 @@ void taskInputProcessing(void *pvParameters){
     double peak = FFT.MajorPeak(buffer,SAMPLES,9600);
     if (peak > max_peak){
         max_peak = peak;
-        mean_peak = (mean_peak + max_peak)/2;
-        counter = 0;
+        n++;
+        mean_peak = mean_peak +(max_peak- mean_peak)/n;
     }
-    counter++;
     Serial.print("Peak value: ");
     Serial.println(max_peak);
-    Serial.print("Counter peaks: ");
-    Serial.println(counter);
+    Serial.print("Counter peaks for average: ");
+    Serial.println(n);
     Serial.println("Spectrum values:");
     Serial.print("[");
     for(int i = 0 ; i < SAMPLES; i++){
