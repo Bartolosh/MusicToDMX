@@ -28,10 +28,7 @@ void taskInputRecording(void *pvParameters){
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
         while(c < SAMPLES){
             buffer[c] = (double)analogRead(A0);
-            //Serial.print("READ  ");
-            //Serial.print(c);
-            //Serial.print(": ");
-            //Serial.println(buffer[c]);
+            //Serial.println((String"Read n." + c + ": "+buffer[c] );
             c++;
         }
         Serial.println("BUFFER FULL");
@@ -64,18 +61,18 @@ void taskInputProcessing(void *pvParameters){
     FFT.ComplexToMagnitude(buffer,buffer_im,SAMPLES);
     
     //TODO: need to fine tune the third param
+    //TODO: need to focus only on bass peak (freq 50Hz - 200Hz)
     double peak = FFT.MajorPeak(buffer,SAMPLES,9600);
     if (peak > max_peak){
         max_peak = peak;
         n++;
         mean_peak = mean_peak + (max_peak -  mean_peak)/n;
     }
-    Serial.print("Peak value: ");
-    Serial.println(max_peak);
-    Serial.print("Counter peaks for average: ");
-    Serial.println(n);
-    Serial.print("Mean peak value:");
-    Serial.println(mean_peak);
+    Serial.println((String)"Peak value: " + max_peak);
+  
+    Serial.println((String)"Counter peaks for average: " + n);
+    
+    Serial.println((String)"Mean peak value: " + mean_peak);
     Serial.println("Spectrum values:");
     Serial.print("[");
     for(int i = 0 ; i < SAMPLES; i++){
@@ -137,11 +134,11 @@ void taskValuate(TimerHandle_t xTimer){
     // Insert code to test here
     finishTime = micros();
     maxTime = max(finishTime - startTime, maxTime);
-    Serial.print("MaxTime: ");
-    Serial.print(maxTime);
+    
+    Serial.println((String)"MaxTime: " + (maxTime/1000000)+ " s");
+    
     Serial.print("    ");
-    Serial.print("Time elapsed");
-    Serial.println(finishTime - startTime);
+    Serial.println((String)"Time elapsed" + ((finishTime - startTime)/1000000)+" s" );
 }
 
 void setup(){
