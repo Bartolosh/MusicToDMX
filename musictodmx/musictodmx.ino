@@ -15,7 +15,7 @@ SemaphoreHandle_t new_data_mtx;
 
 double *buffer;
 double max_peak = 0, mean_peak = 0;
-int counter = 0;
+int n = 0;
 arduinoFFT FFT = arduinoFFT();
 
 int16_t bpm;
@@ -68,12 +68,14 @@ void taskInputProcessing(void *pvParameters){
     if (peak > max_peak){
         max_peak = peak;
         n++;
-        mean_peak = mean_peak +(max_peak- mean_peak)/n;
+        mean_peak = mean_peak + (max_peak -  mean_peak)/n;
     }
     Serial.print("Peak value: ");
     Serial.println(max_peak);
     Serial.print("Counter peaks for average: ");
     Serial.println(n);
+    Serial.print("Mean peak value:");
+    Serial.println(mean_peak);
     Serial.println("Spectrum values:");
     Serial.print("[");
     for(int i = 0 ; i < SAMPLES; i++){
@@ -158,8 +160,8 @@ void setup(){
     //ELABORATION TASK 
     //xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 0, NULL); 
 
-    TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 0, taskValuate);
-    xTimerStart(xTimer, 0);   
+    //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 0, taskValuate);
+    //xTimerStart(xTimer, 0);   
 
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
