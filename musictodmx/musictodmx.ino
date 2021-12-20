@@ -14,7 +14,7 @@ SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
 
 double *buffer;
-double max_peak = 0;
+double max_peak = 0, mean_peak = 0;
 int counter = 0;
 arduinoFFT FFT = arduinoFFT();
 
@@ -43,7 +43,11 @@ void taskInputRecording(void *pvParameters){
         //Serial.println("readIMU end task " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
 
         xSemaphoreGive(buffer_mtx);
-        
+        MPLES){
+            buffer[c] = (double)analogRead(A0);
+            //Serial.print("READ  ");
+            //Serial.print(c);
+            //Serial.print
     }
 }
 
@@ -68,6 +72,7 @@ void taskInputProcessing(void *pvParameters){
     double peak = FFT.MajorPeak(buffer,SAMPLES,9600);
     if (peak > max_peak){
         max_peak = peak;
+        mean_peak = (mean_peak + max_peak)/2;
         counter = 0;
     }
     counter++;
