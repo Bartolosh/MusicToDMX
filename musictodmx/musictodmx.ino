@@ -2,14 +2,14 @@
 #include <timers.h>
 #include <semphr.h>
 #include <stdlib.h>
+#include <string.h>
 #include "arduinoFFT.h"
 #include "manage_output.h"
 #include "fog.h"
 #include "fire.h"
 
-
 #define SAMPLES 2048
-#define FRAME_LENGTH 22
+#define FRAME_LENGTH 100
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
 
@@ -37,6 +37,7 @@ void taskInputRecording(void *pvParameters){
         Serial.println("BUFFER FULL");
         c=0;
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
+            //Serial.println("ProcessingTask can start");
             xSemaphoreGive(new_data_mtx);
         }
         //Serial.println("readIMU end task " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
@@ -49,22 +50,22 @@ void taskInputRecording(void *pvParameters){
 void taskInputProcessing(void *pvParameters){
   //TODO: check init values and re-zero everytime this task starts to try to avoid overflow
   double buffer_im[SAMPLES];
+
   while(true){
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
+    memset(buffer_im, 0, SAMPLES*sizeof(double));
     Serial.println("PROCESSING TASK");
+    
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-    Serial.println("HO PRESO IL SEMAFORO FRA");
+    
     FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
-    Serial.println("HO PRESO IL SEMAFORO FRA 3");
 
     FFT.Compute(buffer,buffer_im,SAMPLES, FFT_FORWARD);
-    Serial.println("HO PRESO IL SEMAFORO FRA 4");
 
     FFT.ComplexToMagnitude(buffer,buffer_im,SAMPLES);
-    Serial.println("HO PRESO IL SEMAFORO FRA 5");
     
     //TODO: need to fine tune the third param
-    double peak = FFT.MajorPeak(buffer,SAMPLES,5000);
+    double peak = FFT.MajorPeak(buffer,SAMPLES,9600);
     if (peak > max_peak){
         max_peak = peak;
         counter = 0;
@@ -72,7 +73,7 @@ void taskInputProcessing(void *pvParameters){
     counter++;
     Serial.print("Peak value: ");
     Serial.println(max_peak);
-    Serial.print("Counter peak: ");
+    Serial.print("Counter peaks: ");
     Serial.println(counter);
     Serial.println("Spectrum values:");
     Serial.print("[");
@@ -121,20 +122,24 @@ void taskFire(void *pvParameters) {
 void taskValuate(TimerHandle_t xTimer){
 
 
-    //Serial.print("inputRec " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
+    Serial.print("inputRec " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
 
 
-    Serial.print("inputProc " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputProc"))));
+    //Serial.print("inputProc " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputProc"))));
 
 
     unsigned long startTime = 0;
     unsigned long finishTime = 0;
     unsigned long maxTime = 0;
+
     startTime = micros();
+    // Insert code to test here
     finishTime = micros();
     maxTime = max(finishTime - startTime, maxTime);
+    Serial.print("MaxTime: ");
     Serial.print(maxTime);
     Serial.print("    ");
+    Serial.print("Time elapsed");
     Serial.println(finishTime - startTime);
 }
 

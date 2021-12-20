@@ -11,8 +11,8 @@ extern eurolite_par par1;
 extern eurolite_par par2;
 extern eurolite_par par3;
 
-moving_head mov1;
-moving_head mov2; //todo control address
+extern moving_head mov1;
+extern moving_head mov2; //todo control address
 
 
 void send_output(uint8_t speed);
