@@ -6,11 +6,11 @@ eurolite_par par2;
 eurolite_par par3;
 
 moving_head mov1;
-moving_head mov2; //todo control address
+moving_head mov2; 
 
 
-void init_fixture(){
-    
+void init_fixture(void){
+
     init_fire(0);
     init_eurolitepar(&par1, 1);
     init_eurolitepar(&par2, 7);
@@ -21,10 +21,10 @@ void init_fixture(){
 
     init_fog(55);
     
-    
+    /*
     if (!DMX.begin(56)) {
         return ;
-    }
+    }*/
 
 }
 

@@ -17,4 +17,4 @@ extern moving_head mov2; //todo control address
 
 void send_output(uint8_t speed);
 
-void init_fixture();
+void init_fixture(void);
