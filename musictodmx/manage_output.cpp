@@ -11,20 +11,20 @@ moving_head mov2;
 
 void init_fixture(void){
 
-    init_fire(0);
-    init_eurolitepar(&par1, 1);
-    init_eurolitepar(&par2, 7);
-    init_eurolitepar(&par3, 13);
+    init_fire(1);
+    init_eurolitepar(&par1, 3);
+    init_eurolitepar(&par2, 9);
+    init_eurolitepar(&par3, 15);
 
-    init_movinghead(&mov1, 19);
-    init_movinghead(&mov2, 37);
+    init_movinghead(&mov1, 21);
+    init_movinghead(&mov2, 39);
 
-    init_fog(55);
+    init_fog(57);
     
-    /*
-    if (!DMX.begin(56)) {
+    
+    if (!DMX.begin(58)) {
         return ;
-    }*/
+    }
 
 }
 
