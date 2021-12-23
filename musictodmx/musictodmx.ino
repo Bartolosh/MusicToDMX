@@ -137,12 +137,20 @@ void taskSendingOutput(void *pvParameters){
 /*-------------------- ASYNC TASK ------------------------*/
 void taskFog(void *pvParameters) {
     /* Block for DURATION. */
- const TickType_t xDelay = FOG_DURATION_TIME / portTICK_PERIOD_MS;
+  TickType_t xLastWakeTime;
+  const TickType_t xFreq = FOG_DURATION_TIME / portTICK_PERIOD_MS;
+  unsigned long startTime = 0;
+  unsigned long finishTime = 0;
+
+  xLastWakeTime = xTaskGetTickCount();
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
-
+    startTime = micros();
     fogStart();
-    vTaskDelay( xDelay );
+    Serial.println("[Fog button pressed !]");
+    vTaskDelayUntil(&xLastWakeTime, xFreq);
+    finishTime = (micros() - startTime)/1000;
+    Serial.println((String) "Fog time elapsed = "+ finishTime);
     fogStop();
 
   }
@@ -153,6 +161,7 @@ void taskFire(void *pvParameters) {
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
     
+    Serial.println("[Fire button pressed !]");
     fireStart();
     
   }

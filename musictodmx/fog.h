@@ -7,7 +7,7 @@
 #include <ArduinoDMX.h>
 
 #define FOG_BUTTON_PIN      D3
-#define FOG_DURATION_TIME   2000 //milli seconds
+#define FOG_DURATION_TIME   1500 //milliseconds
 
 extern uint16_t fog_channel;
 extern TaskHandle_t taskFogHandle;
