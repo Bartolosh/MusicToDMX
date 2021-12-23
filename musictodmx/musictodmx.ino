@@ -25,6 +25,8 @@ RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFA
 //try to set a default value
 int16_t bpm = 120;
 
+/*-------------------- PERIODIC TASK ------------------------*/
+
 // TODO check if the sample frequency is correct
 void taskInputRecording(void *pvParameters){
     //Serial.println("readIMU "+ String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
@@ -110,9 +112,11 @@ void taskInputProcessing(void *pvParameters){
 void taskSendingOutput(void *pvParameters){
     
     TickType_t xLastWakeTime;
-    const TickType_t xFreq = pdMS_TO_TICKS(500);
+
     unsigned long startTime = 0;
     unsigned long finishTime = 0;
+    const TickType_t xFreq = 500 / portTICK_PERIOD_MS;
+
     while(true){
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
         startTime = micros();
