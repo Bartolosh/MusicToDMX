@@ -117,16 +117,17 @@ void taskSendingOutput(void *pvParameters){
     unsigned long finishTime = 0;
     const TickType_t xFreq = 500 / portTICK_PERIOD_MS;
 
+    xLastWakeTime = xTaskGetTickCount();
     while(true){
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
-        startTime = micros();
         Serial.println(xFreq);
-        vTaskDelayUntil(&xLastWakeTime, xFreq);
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
         //Serial.println((String)"bpm = " + bpm);
-        finishTime = micros()- startTime;
-        Serial.println((String)"time elapsed= "+finishTime);
+        Serial.println((String)"port tick = " + portTICK_PERIOD_MS +" time elapsed= "+finishTime);
         send_output(bpm);
+        startTime = micros();
+        vTaskDelayUntil(&xLastWakeTime, xFreq);
+        finishTime = micros()- startTime;
         xSemaphoreGive(bpm_mtx);
 
     }
@@ -197,8 +198,8 @@ void setup(){
     //this task must have higher priority than inputRec bc otherwise it doesn't run
     xTaskCreate(taskInputProcessing, "inputProc", 9000, NULL, 2, NULL);
     //ELABORATION TASK 
-    xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 1, NULL); 
-    //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 0, taskValuate);
+    xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 3, NULL); 
+    //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 3, taskValuate);
     //xTimerStart(xTimer, 0);   
     
 
