@@ -115,7 +115,7 @@ void taskSendingOutput(void *pvParameters){
     TickType_t xLastWakeTime;
     unsigned long startTime = 0;
     unsigned long finishTime = 0;
-    const TickType_t xFreq;
+    TickType_t xFreq;
 
 
     xLastWakeTime = xTaskGetTickCount();
@@ -124,9 +124,10 @@ void taskSendingOutput(void *pvParameters){
         startTime = micros();
         xFreq = MS_IN_MIN / (bpm*portTICK_PERIOD_MS);
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
-        //Serial.println((String)"bpm = " + bpm);
-        Serial.println((String)"port tick = " + portTICK_PERIOD_MS +" time elapsed= "+finishTime);
+        Serial.println((String)"bpm = " + bpm);
+        Serial.println((String)"xFreq = " + xFreq  +" time elapsed= "+finishTime);
         send_output(bpm);
+        bpm+=3;
         vTaskDelayUntil(&xLastWakeTime, xFreq);
         finishTime = (micros() - startTime) / 1000;
         xSemaphoreGive(bpm_mtx);
@@ -185,7 +186,8 @@ void taskValuate(TimerHandle_t xTimer){
 
 void setup(){
     Serial.begin(115200);
-
+    fireSelector();
+    fogSelector();
     init_fixture();
     buffer = (double*)calloc(SAMPLES,sizeof(double));
     buffer_mtx = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
@@ -202,7 +204,9 @@ void setup(){
     //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 3, taskValuate);
     //xTimerStart(xTimer, 0);   
     
-
+    xTaskCreate(taskFog, "fogStart", 48, NULL, 0, &taskFogHandle);
+    xTaskCreate(taskFire, "fireStart", 48, NULL, 0, &taskFireHandle);
+    
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
 }
