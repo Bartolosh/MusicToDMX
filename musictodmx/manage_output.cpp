@@ -32,7 +32,7 @@ void send_output(uint8_t speed){
 
     uint8_t color = rand() %6 +1;
 
-    int mov = rand() %2;
+    int mov = 0;
 
     int mov_col = 0;
     Serial.println((String)"color = " + color + " mov = " + mov + " mov_col = " + mov_col);

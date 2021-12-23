@@ -6,7 +6,7 @@
 #include <ArduinoRS485.h> // the ArduinoDMX library depends on ArduinoRS485
 #include <ArduinoDMX.h>
 
-#define FOG_BUTTON_PIN      13
+#define FOG_BUTTON_PIN      D3
 #define FOG_DURATION_TIME   2000 //milli seconds
 
 extern uint16_t fog_channel;
