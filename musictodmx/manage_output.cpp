@@ -34,7 +34,8 @@ void send_output(uint8_t speed){
 
     int mov = rand() %2;
 
-    int mov_col = rand() %3;
+    int mov_col = 0;
+    Serial.println((String)"color = " + color + " mov = " + mov + " mov_col = " + mov_col);
 
     DMX.beginTransmission();
 

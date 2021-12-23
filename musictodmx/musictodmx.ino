@@ -111,7 +111,7 @@ void taskSendingOutput(void *pvParameters){
     while(true){
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
-        Serial.println((String)"bpm = " + bpm);
+        //Serial.println((String)"bpm = " + bpm);
         send_output(bpm);
         xSemaphoreGive(bpm_mtx);
 
@@ -183,7 +183,7 @@ void setup(){
     //this task must have higher priority than inputRec bc otherwise it doesn't run
     xTaskCreate(taskInputProcessing, "inputProc", 9000, NULL, 2, NULL);
     //ELABORATION TASK 
-    xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 3, NULL); 
+    xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 1, NULL); 
     //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 0, taskValuate);
     //xTimerStart(xTimer, 0);   
     
