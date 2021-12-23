@@ -108,8 +108,13 @@ void taskInputProcessing(void *pvParameters){
 }
 // TODO check if the refresh frequency is correct, if send packet with 512 ch--> 44Hz, 23ms to send a packet
 void taskSendingOutput(void *pvParameters){
+    
+    TickType_t xLastWakeTime;
+    const TickType_t xFreq = pdMS_TO_TICKS(500);
+    
     while(true){
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
+        vTaskDelayUntil(&xLastWakeTime, xFreq);
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
         Serial.println((String)"bpm = " + bpm);
         send_output(bpm);
