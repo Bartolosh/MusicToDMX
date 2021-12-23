@@ -111,12 +111,17 @@ void taskSendingOutput(void *pvParameters){
     
     TickType_t xLastWakeTime;
     const TickType_t xFreq = pdMS_TO_TICKS(500);
-    
+    unsigned long startTime = 0;
+    unsigned long finishTime = 0;
     while(true){
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
+        startTime = micros();
+        Serial.println(xFreq);
         vTaskDelayUntil(&xLastWakeTime, xFreq);
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
         //Serial.println((String)"bpm = " + bpm);
+        finishTime = micros()- startTime;
+        Serial.println((String)"time elapsed= "+finishTime);
         send_output(bpm);
         xSemaphoreGive(bpm_mtx);
 
