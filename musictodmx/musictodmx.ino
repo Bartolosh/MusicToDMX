@@ -137,20 +137,17 @@ void taskSendingOutput(void *pvParameters){
 /*-------------------- ASYNC TASK ------------------------*/
 void taskFog(void *pvParameters) {
     /* Block for DURATION. */
-  TickType_t xLastWakeTimeFog;
   const TickType_t xFreqFog = FOG_DURATION_TIME / portTICK_PERIOD_MS;
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
-
-  xLastWakeTimeFog = xTaskGetTickCount();
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
     startTime = micros();
     fogStart();
     Serial.println("[Fog button pressed !]");
-    vTaskDelayUntil(&xLastWakeTimeFog, xFreqFog);
+    vTaskDelay(xFreqFog);
     finishTime = (micros() - startTime)/1000;
-    Serial.println((String) "FOG Freq = " + + " Fog time elapsed = "+ finishTime);
+    Serial.println((String) "FOG Freq = " + xFreqFog + " Fog time elapsed = "+ finishTime);
     fogStop();
 
   }
@@ -158,15 +155,13 @@ void taskFog(void *pvParameters) {
 
 
 void taskFire(void *pvParameters) {
-  TickType_t xLastWakeTimeFire;
   const TickType_t xFreqFire = 500 / portTICK_PERIOD_MS;
-  xLastWakeTimeFire = xTaskGetTickCount();
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
     
     Serial.println("[Fire button pressed !]");
     fireStart();
-    vTaskDelayUntil(&xLastWakeTimeFire, xFreqFire); //maybe it isn't useful but task fog is dangerous
+    vTaskDelay(xFreqFire); //maybe it isn't useful but task fog is dangerous
     fireStop();
     
   }
