@@ -1,6 +1,6 @@
 #include "fire.h"
 
-uint16_t fire_channel = 0;
+uint16_t fire_channel = 1;
 
 void init_fire(uint16_t ch){
     fire_channel = ch;
@@ -22,9 +22,22 @@ void fireSelector() {
 
 
 void fireStart(){
+    
     DMX.beginTransmission();
     DMX.write(fire_channel, 255);
     DMX.endTransmission();
+    DMX.beginTransmission();
+    DMX.write(fire_channel, 255);
+    DMX.endTransmission();
+    DMX.beginTransmission();
+    DMX.write(fire_channel, 255);
+    DMX.endTransmission();
+    
+    
+}
+
+void fireStop(){
+  //maybe it possible mouve this code in start function
     DMX.beginTransmission();
     DMX.write(fire_channel, 0);
     DMX.endTransmission();

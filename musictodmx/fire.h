@@ -18,5 +18,6 @@ extern void fireHandler(void);
 extern void fireSelector();
 
 extern void fireStart();
+extern void fireStop();
 
 #endif
