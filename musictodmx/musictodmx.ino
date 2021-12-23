@@ -19,6 +19,9 @@ int n = 0, counter_peaks_buffer = 0;
 arduinoFFT FFT = arduinoFFT();
 unsigned long start;
 
+HardwareSerial Serial4(D0, D1);
+RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
+
 //try to set a default value
 int16_t bpm = 120;
 
@@ -167,6 +170,7 @@ void taskValuate(TimerHandle_t xTimer){
 void setup(){
     Serial.begin(115200);
 
+    init_fixture();
     buffer = (double*)calloc(SAMPLES,sizeof(double));
     buffer_mtx = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
     xSemaphoreGive(buffer_mtx); //NOW ALL SEMAPHORE LOCK FOREVER CONTROL IF USEFULs
@@ -178,14 +182,10 @@ void setup(){
     //this task must have higher priority than inputRec bc otherwise it doesn't run
     xTaskCreate(taskInputProcessing, "inputProc", 9000, NULL, 2, NULL);
     //ELABORATION TASK 
-    //xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 0, NULL); 
+    xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 0, NULL); 
     //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 0, taskValuate);
     //xTimerStart(xTimer, 0);   
-
-    // pay attention to this func, it's dangerous for the prints bro, sminchia todos
-    init_fixture();
-
-    //DMX.begin(56);
+    
 
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
