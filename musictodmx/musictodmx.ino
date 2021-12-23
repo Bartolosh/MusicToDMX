@@ -10,6 +10,8 @@
 
 #define SAMPLES 2048
 #define FRAME_LENGTH 100
+#define MS_IN_MIN 60000
+
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
 SemaphoreHandle_t bpm_mtx;
@@ -53,7 +55,6 @@ void taskInputRecording(void *pvParameters){
 }
 
 void taskInputProcessing(void *pvParameters){
-  //TODO: check init values and re-zero everytime this task starts to try to avoid overflow
   double buffer_im[SAMPLES];
   unsigned long finish;
 
@@ -112,16 +113,20 @@ void taskInputProcessing(void *pvParameters){
 void taskSendingOutput(void *pvParameters){
     
     TickType_t xLastWakeTime;
-    const TickType_t xFreq = 500 / portTICK_PERIOD_MS;
-    
+    TickType_t xFreq;
+    unsigned long startTime, finishTime;
+
+    xLastWakeTime = xTaskGetTickCount();
     while(true){
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
-        vTaskDelayUntil(&xLastWakeTime, xFreq);
+        startTime = micros();
+        xFreq = MS_IN_MIN / (bpm*portTICK_PERIOD_MS);
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
         //Serial.println((String)"bpm = " + bpm);
         send_output(bpm);
+        vTaskDelayUntil(&xLastWakeTime, xFreq);
+        finishTime = (micros() - startTime) / 1000;
         xSemaphoreGive(bpm_mtx);
-
     }
 }
 
