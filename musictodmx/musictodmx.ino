@@ -56,13 +56,14 @@ void taskInputRecording(void *pvParameters){
 
 void taskInputProcessing(void *pvParameters){
   double buffer_im[SAMPLES];
-  unsigned long finish;
-
+  unsigned long startTime = 0;
+  unsigned long finishTime = 0;
   while(true){
 
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
+    startTime = micros();
     memset(buffer_im, 0, SAMPLES*sizeof(double));
-    Serial.println("PROCESSING TASK");
+    //Serial.println("PROCESSING TASK");
     
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     
@@ -80,7 +81,6 @@ void taskInputProcessing(void *pvParameters){
     }*/
     n++;
     mean_peak = mean_peak + (peak -  mean_peak)/n;
-    finish = (micros() - start)/1000000;
     if(n>10){
     for(int i = 0; i < SAMPLES; i++){
       if(buffer[i] > mean_peak){
@@ -89,16 +89,19 @@ void taskInputProcessing(void *pvParameters){
       }
     }
     }
+
     xSemaphoreTake(bpm_mtx,portMAX_DELAY);
     bpm = counter_peaks_buffer * 60/finish;
-    Serial.println((String) "Estimated bpm: " + bpm);
+    finishTime = (micros() - start)/1000000;
+    Serial.println((String) "Task ProcessingInput time elapsed: "+ finishTime + " s");
+    //Serial.println((String) "Estimated bpm: " + bpm);
     xSemaphoreGive(bpm_mtx);
     
-    Serial.println((String)"Peak value: " + peak);
+    //Serial.println((String)"Peak value: " + peak);
   
-    Serial.println((String)"Counter peaks for average: " + n + "in "+finish+" s");
+    //Serial.println((String)"Counter peaks for average: " + n + "in "+finish+" s");
     
-    Serial.println((String)"Mean peak value: " + mean_peak);
+    //Serial.println((String)"Mean peak value: " + mean_peak);
     /*Serial.println("Spectrum values:");
     Serial.print("[");
     for(int i = 0 ; i < SAMPLES; i++){
@@ -124,12 +127,12 @@ void taskSendingOutput(void *pvParameters){
         startTime = micros();
         xFreq = MS_IN_MIN / (bpm*portTICK_PERIOD_MS);
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
-        Serial.println((String)"bpm = " + bpm);
-        Serial.println((String)"xFreq = " + xFreq  +" time elapsed= "+finishTime);
+        //Serial.println((String)"bpm = " + bpm);
+        //Serial.println((String)"xFreq = " + xFreq  +" time elapsed= "+finishTime);
         send_output(bpm);
-        bpm+=3;
         vTaskDelayUntil(&xLastWakeTime, xFreq);
         finishTime = (micros() - startTime) / 1000;
+        Serial.println((String) "Task sendOutput time elapse: " + finishTime + " s");
         xSemaphoreGive(bpm_mtx);
     }
 }
@@ -137,17 +140,20 @@ void taskSendingOutput(void *pvParameters){
 /*-------------------- ASYNC TASK ------------------------*/
 void taskFog(void *pvParameters) {
     /* Block for DURATION. */
+  TickType_t xLastWakeTimeFog;
   const TickType_t xFreqFog = FOG_DURATION_TIME / portTICK_PERIOD_MS;
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
+
+  xLastWakeTimeFog = xTaskGetTickCount();
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
     startTime = micros();
     fogStart();
     Serial.println("[Fog button pressed !]");
-    vTaskDelay(xFreqFog);
+    vTaskDelayUntil(&xLastWakeTimeFog, xFreqFog);
     finishTime = (micros() - startTime)/1000;
-    Serial.println((String) "FOG Freq = " + xFreqFog + " Fog time elapsed = "+ finishTime);
+    Serial.println((String) "FOG Freq = " + + " Fog time elapsed = "+ finishTime);
     fogStop();
 
   }
@@ -155,13 +161,15 @@ void taskFog(void *pvParameters) {
 
 
 void taskFire(void *pvParameters) {
+  TickType_t xLastWakeTimeFire;
   const TickType_t xFreqFire = 500 / portTICK_PERIOD_MS;
+  xLastWakeTimeFire = xTaskGetTickCount();
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
     
     Serial.println("[Fire button pressed !]");
     fireStart();
-    vTaskDelay(xFreqFire); //maybe it isn't useful but task fog is dangerous
+    vTaskDelayUntil(&xLastWakeTimeFire, xFreqFire); //maybe it isn't useful but task fog is dangerous
     fireStop();
     
   }
