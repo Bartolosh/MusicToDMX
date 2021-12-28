@@ -33,7 +33,15 @@ int16_t bpm = 120;
 void taskInputRecording(void *pvParameters){
     //Serial.println("readIMU "+ String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
     uint16_t c = 0;
-    start = micros();
+
+    TickType_t xLastWakeTime;
+    unsigned long startTime = 0;
+    unsigned long finishTime = 0;
+    // xFreq is set to 1/4 of seconds but need to be set after timer analysis of processing and output
+    TickType_t xFreq = 250 / (portTICK_PERIOD_MS);
+
+
+    xLastWakeTime = xTaskGetTickCount();
     while(true){
         Serial.println("REC: [");
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
@@ -50,6 +58,7 @@ void taskInputRecording(void *pvParameters){
             xSemaphoreGive(new_data_mtx);
         }
         //Serial.println("readIMU end task " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
+        vTaskDelayUntil(&xLastWakeTime, xFreq);
 
         xSemaphoreGive(buffer_mtx);
         
