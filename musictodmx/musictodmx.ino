@@ -172,10 +172,11 @@ void taskSendingOutput(void *pvParameters){
         
         if(uxSemaphoreGetCount(ligth_mtx) > 0){
           xSemaphoreTake(light_mtx);
-          send_output(bpm);
+          send_output(bpm,1);
         }
         else{
           //TODO: add same call of previous exec
+          send_output(bpm);
         }
 
         if(uxSemaphoreGetCount(mov_mtx) > 0){

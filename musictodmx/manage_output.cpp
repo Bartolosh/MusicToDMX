@@ -28,10 +28,16 @@ void init_fixture(void){
 
 }
 
-void send_output(uint8_t speed){
-
-    uint8_t color = rand() %6 +1;
-
+// mode = 1 --> random
+// mode = 0 --> current color
+void send_output(uint8_t speed, uint8_t mode = 0){
+    uint8_t color;
+    if(mode){
+        color = rand() %6 +1;
+    }
+    else{
+        color = par1.current_color;
+    }
     int mov = 0;
 
     int mov_col = 0;
