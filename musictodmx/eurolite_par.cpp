@@ -1,5 +1,8 @@
 #include "eurolite_par.h"
 
+#define ROTATE 0
+#define UPNDOWN 1
+
 void init_eurolitepar(eurolite_par *par, int start_address){
     par->start_address = start_address;
     par->ch_red = start_address;
@@ -8,6 +11,7 @@ void init_eurolitepar(eurolite_par *par, int start_address){
     par->ch_dimmer = start_address+4;
     par->ch_strobe = start_address+5;
     par->current_color = WHITE;
+    par->current_mov = ROTATE;
 }
 
 void change_color(eurolite_par par,uint8_t color){

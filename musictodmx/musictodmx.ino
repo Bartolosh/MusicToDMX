@@ -157,6 +157,7 @@ void taskSendingOutput(void *pvParameters){
 
 
     xLastWakeTime = xTaskGetTickCount();
+    uint8_t light_mode, mov_mode;
     while(true){
 
         Serial.println("OUTPUT [");
@@ -172,20 +173,22 @@ void taskSendingOutput(void *pvParameters){
         
         if(uxSemaphoreGetCount(ligth_mtx) > 0){
           xSemaphoreTake(light_mtx);
-          send_output(bpm,1);
+          light_mode = 1;
         }
         else{
-          //TODO: add same call of previous exec
-          send_output(bpm);
+          light_mode = 0;
         }
 
         if(uxSemaphoreGetCount(mov_mtx) > 0){
           xSemaphoreTake(mov_mtx);
           //TODO: add call for change mov speed
+          mov_mode = 1;
         }
         else{
-          //TODO: add same call of previous exec
+          mov_mode = 0;
         }
+        
+        send_output(bpm, light_mode, mov_mode);
         
         vTaskDelayUntil(&xLastWakeTime, xFreq);
         finishTime = (micros() - startTime) / 1000;

@@ -28,17 +28,27 @@ void init_fixture(void){
 
 }
 
-// mode = 1 --> random
-// mode = 0 --> current color
-void send_output(uint8_t speed, uint8_t mode = 0){
+// mode = 1 --> random 
+// mode = 0 --> use current
+void send_output(uint8_t speed, uint8_t light_mode = 0, uint8_t mov_mode = 0){
     uint8_t color;
-    if(mode){
-        color = rand() %6 +1;
+    int mov;
+
+    // check if need to change light
+    if(light_mode){
+        color = rand() % 6 +1;
     }
     else{
         color = par1.current_color;
     }
-    int mov = 0;
+    
+    // check if need to change mov
+    if(mov_mode){
+        mov = rand() % 2 +1;
+    }
+    else{
+        mov = par1.current_mov;
+    }
 
     int mov_col = 0;
     //Serial.println((String)"color = " + color + " mov = " + mov + " mov_col = " + mov_col);

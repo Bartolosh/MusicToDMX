@@ -18,6 +18,7 @@ typedef struct{
     int ch_dimmer;
     int ch_strobe;
     int current_color;
+    int current_mov;
 }eurolite_par;
 
 void init_eurolitepar(eurolite_par *par, int start_address);
