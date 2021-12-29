@@ -11,12 +11,15 @@
 #define SAMPLES 2048
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
+#define THRESHOLD_MEAN 200    //TODO: need to be checked if it is good enough
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
 SemaphoreHandle_t bpm_mtx;
+SemaphoreHandle_t light_mtx;
+SempahoreHandle_t mov_mtx;
 double *buffer;
-double max_peak = 0, mean_peak = 0;
+double max_peak = 0, mean_peak = 0, mean_peak_prev = 0;
 int n = 0, counter_peaks_buffer = 0;
 arduinoFFT FFT = arduinoFFT();
 unsigned long start;
@@ -89,13 +92,20 @@ void taskInputProcessing(void *pvParameters){
         max_peak = peak;
     }*/
     n++;
+    mean_peak_prev = mean_peak;
     mean_peak = mean_peak + (peak -  mean_peak)/n;
     if(n>10){
+    //everytime it detect a peak it let lights change 
     for(int i = 0; i < SAMPLES; i++){
       if(buffer[i] > mean_peak){
         counter_peaks_buffer++;
+        xSempahoreGive(light_mtx);
         //Serial.println((String) "Peaks counter: "+ counter_peaks_buffer);
       }
+    }
+    //check if is changed the rhythm of the song to change mov
+    if(mean_peak - mean_peak_prev >= THRESHOLD_MEAN ){
+      xSemaphoreGive(mov_mtx);
     }
     }
 
@@ -132,13 +142,30 @@ void taskSendingOutput(void *pvParameters){
 
     xLastWakeTime = xTaskGetTickCount();
     while(true){
+        
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
         startTime = micros();
         xFreq = MS_IN_MIN / (bpm*portTICK_PERIOD_MS);
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
         //Serial.println((String)"bpm = " + bpm);
         //Serial.println((String)"xFreq = " + xFreq  +" time elapsed= "+finishTime);
-        send_output(bpm);
+        
+        if(uxSemaphoreGetCount(ligth_mtx) > 0){
+          xSemaphoreTake(light_mtx);
+          send_output(bpm);
+        }
+        else{
+          //TODO: add same call of previous exec
+        }
+
+        if(uxSemaphoreGetCount(mov_mtx) > 0){
+          xSemaphoreTake(mov_mtx);
+          //TODO: add call for change mov speed
+        }
+        else{
+          //TODO: add same call of previous exec
+        }
+        
         vTaskDelayUntil(&xLastWakeTime, xFreq);
         finishTime = (micros() - startTime) / 1000;
         Serial.println((String) "Task sendOutput time elapse: " + finishTime + " s");
@@ -216,10 +243,14 @@ void setup(){
     fogSelector();
     init_fixture();
     buffer = (double*)calloc(SAMPLES,sizeof(double));
+    
     buffer_mtx = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
-    xSemaphoreGive(buffer_mtx); //NOW ALL SEMAPHORE LOCK FOREVER CONTROL IF USEFULs
     new_data_mtx = xSemaphoreCreateBinary();
     bpm_mtx = xSemaphoreCreateBinary();
+    mov_mtx = xSemaphoreCreateBinary();
+    light_mtx = xSemaphoreCreateBinary();
+
+    xSemaphoreGive(buffer_mtx);
     xSemaphoreGive(bpm_mtx); 
 
     xTaskCreate(taskInputRecording, "inputRec", 160, NULL, 1, NULL); 
