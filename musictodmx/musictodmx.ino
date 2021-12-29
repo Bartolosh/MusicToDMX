@@ -21,6 +21,7 @@ SempahoreHandle_t mov_mtx;
 double *buffer;
 double max_peak = 0, mean_peak = 0, mean_peak_prev = 0;
 int n = 0, counter_peaks_buffer = 0;
+
 arduinoFFT FFT = arduinoFFT();
 unsigned long start;
 
@@ -46,8 +47,10 @@ void taskInputRecording(void *pvParameters){
 
     xLastWakeTime = xTaskGetTickCount();
     while(true){
-
+        Serial.println("REC: [");
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
+        Serial.println((String)"prendo il semaforo del buffer rec" + uxSemaphoreGetCount(buffer_mtx));
+        
         while(c < SAMPLES){
             buffer[c] = (double)analogRead(A0);
             //Serial.println((String)"Read n." + c + ": "+buffer[c] );
@@ -56,13 +59,19 @@ void taskInputRecording(void *pvParameters){
         Serial.println("BUFFER FULL");
         c=0;
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
-            //Serial.println("ProcessingTask can start");
+            Serial.println("aumento semaforo dei dati nuovi");
             xSemaphoreGive(new_data_mtx);
         }
         //Serial.println("readIMU end task " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
         vTaskDelayUntil(&xLastWakeTime, xFreq);
 
+    
+        Serial.println("rilascio il semaforo del buffer rec");
+        
+        Serial.println("]");    
         xSemaphoreGive(buffer_mtx);
+        
+        
     }
 }
 
@@ -71,13 +80,18 @@ void taskInputProcessing(void *pvParameters){
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
   while(true){
-
+    
+    Serial.println("PROCESSING [");
+    
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
+    Serial.println("prendo il semaforo dei nuovi dati");
+    
     startTime = micros();
     memset(buffer_im, 0, SAMPLES*sizeof(double));
     //Serial.println("PROCESSING TASK");
-    
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
+
+    Serial.println((String)"prendo il semaforo del buffer" + uxSemaphoreGetCount(buffer_mtx));
     
     FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
 
@@ -108,12 +122,13 @@ void taskInputProcessing(void *pvParameters){
       xSemaphoreGive(mov_mtx);
     }
     }
-
+    Serial.println("prendo il semaforo del bpm");
     xSemaphoreTake(bpm_mtx,portMAX_DELAY);
+    finishTime = (micros() - startTime)/1000;
     bpm = counter_peaks_buffer * 60/finishTime;
-    finishTime = (micros() - start)/1000000;
-    Serial.println((String) "Task ProcessingInput time elapsed: "+ finishTime + " s");
+    Serial.println((String) "Task ProcessingInput elapsed: "+ finishTime + " ms");
     //Serial.println((String) "Estimated bpm: " + bpm);
+    Serial.println("rilascio il semaforo dei bpm");
     xSemaphoreGive(bpm_mtx);
     
     //Serial.println((String)"Peak value: " + peak);
@@ -128,6 +143,7 @@ void taskInputProcessing(void *pvParameters){
         Serial.println(",");
     }
     Serial.println("]");*/
+    Serial.println("rilascio il semaforo del buffer]");
     xSemaphoreGive(buffer_mtx);
   }
 }
@@ -142,8 +158,12 @@ void taskSendingOutput(void *pvParameters){
 
     xLastWakeTime = xTaskGetTickCount();
     while(true){
-        
+
+        Serial.println("OUTPUT [");
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
+        
+        Serial.println("prendo il semaforo dei bpm");
+        
         startTime = micros();
         xFreq = MS_IN_MIN / (bpm*portTICK_PERIOD_MS);
         bpm = (int)pvParameters; //TODO control if out while, and if dmx work
@@ -169,7 +189,20 @@ void taskSendingOutput(void *pvParameters){
         vTaskDelayUntil(&xLastWakeTime, xFreq);
         finishTime = (micros() - startTime) / 1000;
         Serial.println((String) "Task sendOutput time elapse: " + finishTime + " s");
+
         xSemaphoreGive(bpm_mtx);
+        
+        Serial.println("rilascio il semaforo dei bpm");
+
+        Serial.println("Mi blocco in attesa del prossimo periodo");
+        finishTime = (micros() - startTime) / 1000;
+        Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");
+        
+        vTaskDelayUntil(&xLastWakeTime, xFreq);
+
+        Serial.println("SVEGLIA]");
+
+        
     }
 }
 
@@ -244,20 +277,20 @@ void setup(){
     init_fixture();
     buffer = (double*)calloc(SAMPLES,sizeof(double));
     
-    buffer_mtx = xSemaphoreCreateBinary();                               /* semaphores for buffer*/
+    buffer_mtx = xSemaphoreCreateMutex();                               /* semaphores for buffer*/
     new_data_mtx = xSemaphoreCreateBinary();
-    bpm_mtx = xSemaphoreCreateBinary();
+    bpm_mtx = xSemaphoreCreateMutex();
     mov_mtx = xSemaphoreCreateBinary();
     light_mtx = xSemaphoreCreateBinary();
 
     xSemaphoreGive(buffer_mtx);
     xSemaphoreGive(bpm_mtx); 
 
-    xTaskCreate(taskInputRecording, "inputRec", 160, NULL, 1, NULL); 
+    xTaskCreate(taskInputRecording, "inputRec", 250/*160*/, NULL, 1, NULL); 
     //this task must have higher priority than inputRec bc otherwise it doesn't run
-    xTaskCreate(taskInputProcessing, "inputProc", 5000, NULL, 2, NULL);
+    xTaskCreate(taskInputProcessing, "inputProc", 5000, NULL,2 , NULL);
     //ELABORATION TASK 
-    xTaskCreate(taskSendingOutput, "outputSend", 115, (void *)bpm, 3, NULL); 
+    xTaskCreate(taskSendingOutput, "outputSend", 250, (void *)bpm, 3, NULL); 
     //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 3, taskValuate);
     //xTimerStart(xTimer, 0);   
     
