@@ -30,13 +30,14 @@ void init_fixture(void){
 
 // mode = 1 --> random 
 // mode = 0 --> use current
-void send_output(uint8_t speed, uint8_t light_mode = 0, uint8_t mov_mode = 0){
+void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode){
     uint8_t color;
     int mov;
 
     // check if need to change light
     if(light_mode){
         color = rand() % 6 +1;
+        par1.current_color = color;
     }
     else{
         color = par1.current_color;
@@ -45,9 +46,10 @@ void send_output(uint8_t speed, uint8_t light_mode = 0, uint8_t mov_mode = 0){
     // check if need to change mov
     if(mov_mode){
         mov = rand() % 2 +1;
+        mov1.state = mov;
     }
     else{
-        mov = par1.current_mov;
+        mov = mov1.state;
     }
 
     int mov_col = 0;

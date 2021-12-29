@@ -16,8 +16,8 @@
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
 SemaphoreHandle_t bpm_mtx;
-SemaphoreHandle_t light_mtx;
-SempahoreHandle_t mov_mtx;
+SemaphoreHandle_t color_mtx;
+SemaphoreHandle_t mov_mtx;
 double *buffer;
 double max_peak = 0, mean_peak = 0, mean_peak_prev = 0;
 int n = 0, counter_peaks_buffer = 0;
@@ -47,26 +47,23 @@ void taskInputRecording(void *pvParameters){
 
     xLastWakeTime = xTaskGetTickCount();
     while(true){
-        Serial.println("REC: [");
-        
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-        Serial.println((String)"prendo il semaforo del buffer rec");
-        
+        startTime = micros();
         while(c < SAMPLES){
             buffer[c] = (double)analogRead(A0);
             //Serial.println((String)"Read n." + c + ": "+buffer[c] );
             c++;
         }
-        Serial.println("BUFFER FULL");
+        //Serial.println("BUFFER FULL");
         c=0;
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
-            Serial.println("aumento semaforo dei dati nuovi");
             xSemaphoreGive(new_data_mtx);
         }
         //Serial.println("readIMU end task " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
-        Serial.println("rilascio il semaforo del buffer rec");
         
-        Serial.println("]");  
+        finishTime = (micros() - startTime)/1000;
+        
+        //Serial.println((String) "Task RecordingInput elapsed: "+ finishTime + " ms");
         xSemaphoreGive(buffer_mtx);
         vTaskDelayUntil(&xLastWakeTime, xFreq);    
         
@@ -78,18 +75,12 @@ void taskInputProcessing(void *pvParameters){
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
   while(true){
-    
-    Serial.println("PROCESSING [");
-    
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
-    Serial.println("prendo il semaforo dei nuovi dati");
     
     startTime = micros();
     memset(buffer_im, 0, SAMPLES*sizeof(double));
-    //Serial.println("PROCESSING TASK");
-    xSemaphoreTake(buffer_mtx, portMAX_DELAY);
 
-    Serial.println((String)"prendo il semaforo del buffer");
+    xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     
     FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
 
@@ -109,33 +100,30 @@ void taskInputProcessing(void *pvParameters){
     if(n>10){
     //everytime it detect a peak it let lights change 
     for(int i = 0; i < SAMPLES; i++){
-      if(buffer[i] > mean_peak){
+      if(buffer[i] >= mean_peak){ //only one time for rec maybe
         counter_peaks_buffer++;
-        xSempahoreGive(light_mtx);
+        xSemaphoreGive(color_mtx);
         //Serial.println((String) "Peaks counter: "+ counter_peaks_buffer);
       }
     }
+    //Serial.println((String)"prev peak = " + mean_peak_prev + "  mean peak now = " + mean_peak);
     //check if is changed the rhythm of the song to change mov
     if(mean_peak - mean_peak_prev >= THRESHOLD_MEAN ){
       xSemaphoreGive(mov_mtx);
     }
     }
-    Serial.println("prendo il semaforo del bpm");
-    Serial.println("rilascio il semaforo del buffer");
     xSemaphoreGive(buffer_mtx);
     xSemaphoreTake(bpm_mtx,portMAX_DELAY);
     finishTime = (micros() - startTime)/1000;
     bpm = counter_peaks_buffer * 60/finishTime;
-    Serial.println((String) "Task ProcessingInput elapsed: "+ finishTime + " ms");
-    //Serial.println((String) "Estimated bpm: " + bpm);
-    Serial.println("rilascio il semaforo dei bpm]");
+    //Serial.println((String) "Task ProcessingInput elapsed: "+ finishTime + " ms");
     xSemaphoreGive(bpm_mtx);
     
-    //Serial.println((String)"Peak value: " + peak);
+    Serial.println((String)"Peak value: " + peak);
   
     //Serial.println((String)"Counter peaks for average: " + n + "in "+finish+" s");
     
-    //Serial.println((String)"Mean peak value: " + mean_peak);
+    Serial.println((String)"Mean peak value: " + mean_peak);
     /*Serial.println("Spectrum values:");
     Serial.print("[");
     for(int i = 0 ; i < SAMPLES; i++){
@@ -158,25 +146,20 @@ void taskSendingOutput(void *pvParameters){
     xLastWakeTime = xTaskGetTickCount();
     uint8_t light_mode, mov_mode;
     while(true){
-
-        Serial.println("OUTPUT [");
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
         
-        Serial.println("prendo il semaforo dei bpm");
-        
         startTime = micros();
-        if(bpm <= 0){
-          xFreq = MS_IN_MIN / (150*portTICK_PERIOD_MS);
-        }
-        else{
-          xFreq = MS_IN_MIN / (bpm*portTICK_PERIOD_MS);
-        }
+        xFreq = MS_IN_MIN / (300*portTICK_PERIOD_MS);
+        
+        //we don't use bpm anymore
+        xSemaphoreGive(bpm_mtx);
         
         //Serial.println((String)"bpm = " + bpm);
         //Serial.println((String)"xFreq = " + xFreq  +" time elapsed= "+finishTime);
         
-        if(uxSemaphoreGetCount(ligth_mtx) > 0){
-          xSemaphoreTake(light_mtx);
+        if(uxSemaphoreGetCount(color_mtx) > 0){
+          xSemaphoreTake(color_mtx,portMAX_DELAY);
+          Serial.println((String)"COLOR SEM " + uxSemaphoreGetCount(color_mtx));
           light_mode = 1;
         }
         else{
@@ -184,7 +167,7 @@ void taskSendingOutput(void *pvParameters){
         }
 
         if(uxSemaphoreGetCount(mov_mtx) > 0){
-          xSemaphoreTake(mov_mtx);
+          xSemaphoreTake(mov_mtx,portMAX_DELAY);
           //TODO: add call for change mov speed
           mov_mode = 1;
         }
@@ -193,16 +176,13 @@ void taskSendingOutput(void *pvParameters){
         }
         
         send_output(bpm, light_mode, mov_mode);
+
+        
         
         vTaskDelayUntil(&xLastWakeTime, xFreq);
         finishTime = (micros() - startTime) / 1000;
         Serial.println((String) "Task sendOutput time elapse: " + finishTime + " s");
 
-        xSemaphoreGive(bpm_mtx);
-        
-        Serial.println("rilascio il semaforo dei bpm");
-
-        Serial.println("Mi blocco in attesa del prossimo periodo");
         Serial.println(bpm);
         finishTime = (micros() - startTime) / 1000;
         Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");
@@ -290,7 +270,7 @@ void setup(){
     new_data_mtx = xSemaphoreCreateBinary();
     bpm_mtx = xSemaphoreCreateMutex();
     mov_mtx = xSemaphoreCreateBinary();
-    light_mtx = xSemaphoreCreateBinary();
+    color_mtx = xSemaphoreCreateBinary();
 
     xSemaphoreGive(buffer_mtx);
     xSemaphoreGive(bpm_mtx); 

@@ -11,10 +11,10 @@ void init_eurolitepar(eurolite_par *par, int start_address){
     par->ch_dimmer = start_address+4;
     par->ch_strobe = start_address+5;
     par->current_color = WHITE;
-    par->current_mov = ROTATE;
 }
 
 void change_color(eurolite_par par,uint8_t color){
+  
     switch(color){
         case RED:
             DMX.write(par.ch_red, 255);

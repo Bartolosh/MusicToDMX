@@ -8,6 +8,7 @@ void init_movinghead(moving_head *head, int start_address){
     head->ch_pan = start_address;
     head->ch_tilt = start_address + 2;
     head->ch_speed = start_address + 4;
+    head->state = ROTATE1;
 }
 
 void set_color(moving_head head,uint8_t color){
