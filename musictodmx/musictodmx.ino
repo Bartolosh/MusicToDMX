@@ -62,7 +62,7 @@ void taskInputRecording(void *pvParameters){
             //Serial.println((String)"Read n." + c + ": "+buffer[c] );
             c++;
         }
-        Serial.println("BUFFER FULL");
+        //Serial.println("BUFFER FULL");
         c=0;
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
             xSemaphoreGive(new_data_mtx);
@@ -79,18 +79,16 @@ void taskInputRecording(void *pvParameters){
 }
 
 void taskInputProcessing(void *pvParameters){
-  //double buffer_im[SAMPLES];
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
   
   double filtered, peak_fil, max_peak_fil, min_peak_fil;
 
   while(true){
-    Serial.println("processing");
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     
     startTime = millis();
-    //memset(buffer_im, 0, SAMPLES*sizeof(double));
+
 
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     peak_fil = 0;
@@ -102,20 +100,7 @@ void taskInputProcessing(void *pvParameters){
     max_peak_fil = max(max_peak_fil,peak_fil);
     min_peak_fil = min(min_peak_fil, peak_fil);
     
-    /*FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
-
-    FFT.Compute(buffer,buffer_im,SAMPLES, FFT_FORWARD);
-
-    FFT.ComplexToMagnitude(buffer,buffer_im,SAMPLES);
-    //TODO: need to fine tune the third param
-    //TODO: need to focus only on bass peak (freq 50Hz - 200Hz)
-    double peak = FFT.MajorPeak(buffer,SAMPLES,9600);
-
-    Serial.println((String) "Comparison peaks: peak --> "+peak+" peak_fil --> "+peak_fil);
-    */
     peak_arr = add_first(peak_arr,peak_fil);
-    Serial.print("add an element to list  ");
-    Serial.println(n);
     n++;
 
     /* Each 1000 iterations, reset the minimum and maximum detected values.
@@ -164,9 +149,7 @@ void taskInputProcessing(void *pvParameters){
     xSemaphoreGive(bpm_mtx);
     
     Serial.println((String)"Peak value: " + peak_fil);
-  
-    //Serial.println((String)"Counter peaks for average: " + n + "in "+finish+" s");
-    
+
     Serial.println((String)"Mean peak value: " + mean_peak);
     /*Serial.println("Spectrum values:");
     Serial.print("[");
@@ -203,7 +186,6 @@ void taskSendingOutput(void *pvParameters){
         
         if(uxSemaphoreGetCount(color_mtx) > 0){
           xSemaphoreTake(color_mtx,portMAX_DELAY);
-          Serial.println((String)"COLOR SEM " + uxSemaphoreGetCount(color_mtx));
           light_mode = 1;
         }
         else{
@@ -221,15 +203,10 @@ void taskSendingOutput(void *pvParameters){
         
         send_output(bpm, light_mode, mov_mode);
 
-        Serial.println(bpm);
         finishTime = (micros() - startTime) / 1000;
-        Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");
+        //Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");
         
         vTaskDelayUntil(&xLastWakeTime, xFreq);
-
-        Serial.println("SVEGLIA]");
-
-        
     }
 }
 
