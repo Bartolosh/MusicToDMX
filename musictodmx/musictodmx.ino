@@ -285,13 +285,22 @@ void taskValuate(TimerHandle_t xTimer){
     unsigned long startTime = 0;
     unsigned long finishTime = 0;
     unsigned long maxTime = 0;
+    double filtered, peak;
 
-    startTime = micros();
+    startTime = millis();
     // Insert code to test here
-    finishTime = micros();
+    for(int k=0; k<SAMPLES; k++){
+      buffer[k] = (double) analogRead(A0);
+      LowPassFilter_put(filter, buffer[k]);
+      filtered = LowPassFilter_get(filter);
+
+      peak = max(peak, filtered);
+    }
+    finishTime = millis();
     maxTime = max(finishTime - startTime, maxTime);
- 
-    Serial.println((String)"MaxTime: " + (maxTime/1000000)+ " s");
+    float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
+    Serial.println((String)"MaxTime: " + maxTime + " ms");
+    Serial.println((String)"Freq: " + freq +" peak: "+ peak);
     
     Serial.print("    ");
     Serial.println((String)"Time elapsed" + ((finishTime - startTime)/1000000)+" s" );
