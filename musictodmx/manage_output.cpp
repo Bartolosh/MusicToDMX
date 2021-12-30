@@ -36,7 +36,7 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode){
 
     // check if need to change light
     if(light_mode){
-        Serial.println("change color");
+        //Serial.println("change color");
         color = rand() % 6 +1;
         if(color == par1.current_color ){
           color = (color + 1)% 6 +1;
@@ -44,7 +44,7 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode){
         par1.current_color = color;
     }
     else{
-        Serial.println("no change");
+        //Serial.println("no change");
         color = par1.current_color;
     }
     

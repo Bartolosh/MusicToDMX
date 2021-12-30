@@ -48,20 +48,3 @@ float stddev(float data[], int len) {
 
     return sqrt(standardDeviation/len);
 }
-
-int main() {
-    printf("Hello, World!\n");
-    int lag = 100;
-    float threshold = 5;
-    float influence = 0;
-    float y[]=  {1,1,1.1,1,0.9,1,1,1.1,1,0.9,1,1.1,1,1,0.9,1,1,1.1,1,1,1,1,1.1,0.9,1,1.1,1,1,0.9,
-  ....
-1,1.1,1,1,1.1,1,0.8,0.9,1,1.2,0.9,1,1,1.1,1.2,1,1.5,1,3,2,5,3,2,1,1,1,0.9,1,1,3,       2.6,4,3,3.2,2,1,1,0.8,4,4,2,2.5,1,1,1,1.2,1,1.5,1,3,2,5,3,2,1,1,1,0.9,1,1,3,
-       2.6,4,3,3.2,2,1,1,0.8,4,4,2,2.5,1,1,1}
-
-    int signal[SAMPLE_LENGTH];
-
-    thresholding(y, lag, threshold, influence);
-
-    return 0;
-}

@@ -6,6 +6,7 @@
 #include "arduinoFFT.h"
 #include "manage_output.h"
 #include "list_custom.h"
+#include "z_score.h"
 #include "fog.h"
 #include "fire.h"
 
@@ -16,18 +17,15 @@
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
-SemaphoreHandle_t bpm_mtx;
 SemaphoreHandle_t color_mtx;
 SemaphoreHandle_t mov_mtx;
 
-double *buffer;
-double max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
-int n = 0, counter_peaks_buffer = 0;
+float *buffer;
 
-float imp[10] = {1,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.3,0.2};
-list *peak_arr;
+float lag = 100; //number of elements that it's used to model data
+float influence = 0.75; //how signal influence average and deviation
+float threshold = 2; //how much the singal must be different from deviation for activate
 
-arduinoFFT FFT = arduinoFFT();
 unsigned long start;
 
 HardwareSerial Serial4(D0, D1);
@@ -55,11 +53,12 @@ void taskInputRecording(void *pvParameters){
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
         startTime = micros();
         while(c < SAMPLES){
-            buffer[c] = (double)analogRead(A0);
-            //Serial.println((String)"Read n." + c + ": "+buffer[c] );
+            buffer[c] = (float)analogRead(A0);
+            Serial.println(buffer[c]);
             c++;
         }
-        Serial.println("BUFFER FULL");
+      
+        //Serial.println("BUFFER FULL");
         c=0;
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
             xSemaphoreGive(new_data_mtx);
@@ -76,81 +75,31 @@ void taskInputRecording(void *pvParameters){
 }
 
 void taskInputProcessing(void *pvParameters){
-  double buffer_im[SAMPLES];
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
   
   while(true){
-    Serial.println("processing");
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     
     startTime = micros();
-    memset(buffer_im, 0, SAMPLES*sizeof(double));
 
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     
-    FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
-
-    FFT.Compute(buffer,buffer_im,SAMPLES, FFT_FORWARD);
-
-    FFT.ComplexToMagnitude(buffer,buffer_im,SAMPLES);
-    //TODO: need to fine tune the third param
-    //TODO: need to focus only on bass peak (freq 50Hz - 200Hz)
-    double peak = FFT.MajorPeak(buffer,SAMPLES,9600);
-    /*if (peak > max_peak){
-        max_peak = peak;
-    }*/
-    
-    peak_arr = add_first(peak_arr,peak);
-    Serial.print("add an element to list  ");
-    Serial.println(n);
-    n++;
-    mean_peak_prev = mean_peak;
-    if(n>10){
-      delete_last(peak_arr);
-      mean_peak = 0;
-      list *l = peak_arr; 
-      for(int i = 0;i<10; i++){
-        mean_peak += imp[i]*l->value;
-        l = l->next; 
-      }
-      mean_peak = mean_peak/imp_sum; //media pesata
-      //everytime it detect a peak it let lights change 
-      /*for(int i = 0; i < SAMPLES; i++){
-        if(buffer[i] >= mean_peak){ //only one time for rec maybe, maybe useful if use only peak
-          counter_peaks_buffer++;
-          xSemaphoreGive(color_mtx);
-        }
-      }*/
-      if(peak >= mean_peak-30){
-        xSemaphoreGive(color_mtx);
-      }
+    if(thresholding(buffer,lag,threshold,influence)){
+      xSemaphoreGive(color_mtx);
+    }
     //Serial.println((String)"prev peak = " + mean_peak_prev + "  mean peak now = " + mean_peak);
     //check if is changed the rhythm of the song to change mov 
     //control if with average or with peack value
-    if(mean_peak - mean_peak_prev >= THRESHOLD_MEAN ){
+    /*if(mean_peak - mean_peak_prev >= THRESHOLD_MEAN ){
       xSemaphoreGive(mov_mtx);
-    }
-    }
+    }*/
+    
     xSemaphoreGive(buffer_mtx);
-    xSemaphoreTake(bpm_mtx,portMAX_DELAY);
+
     finishTime = (micros() - startTime)/1000;
-    bpm = counter_peaks_buffer * 60/finishTime;
     //Serial.println((String) "Task ProcessingInput elapsed: "+ finishTime + " ms");
-    xSemaphoreGive(bpm_mtx);
-    
-    Serial.println((String)"Peak value: " + peak);
-  
     //Serial.println((String)"Counter peaks for average: " + n + "in "+finish+" s");
-    
-    Serial.println((String)"Mean peak value: " + mean_peak);
-    /*Serial.println("Spectrum values:");
-    Serial.print("[");
-    for(int i = 0 ; i < SAMPLES; i++){
-        Serial.print(buffer[i]);
-        Serial.println(",");
-    }
-    Serial.println("]");*/
     
   }
 }
@@ -158,28 +107,19 @@ void taskInputProcessing(void *pvParameters){
 void taskSendingOutput(void *pvParameters){
     
     TickType_t xLastWakeTime;
-    unsigned long startTime = 0;
-    unsigned long finishTime = 0;
     TickType_t xFreq;
 
 
     xLastWakeTime = xTaskGetTickCount();
     uint8_t light_mode, mov_mode;
-    while(true){
-        xSemaphoreTake(bpm_mtx,portMAX_DELAY);
-        
-        startTime = micros();
-        xFreq = MS_IN_MIN / (300*portTICK_PERIOD_MS);
-        
-        //we don't use bpm anymore
-        xSemaphoreGive(bpm_mtx);
-        
+    while(true){        
+       
+        xFreq = MS_IN_MIN / (300*portTICK_PERIOD_MS);      
         //Serial.println((String)"bpm = " + bpm);
         //Serial.println((String)"xFreq = " + xFreq  +" time elapsed= "+finishTime);
         
         if(uxSemaphoreGetCount(color_mtx) > 0){
           xSemaphoreTake(color_mtx,portMAX_DELAY);
-          Serial.println((String)"COLOR SEM " + uxSemaphoreGetCount(color_mtx));
           light_mode = 1;
         }
         else{
@@ -196,16 +136,8 @@ void taskSendingOutput(void *pvParameters){
         }
         
         send_output(bpm, light_mode, mov_mode);
-
-        Serial.println(bpm);
-        finishTime = (micros() - startTime) / 1000;
-        Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");
-        
         vTaskDelayUntil(&xLastWakeTime, xFreq);
-
-        Serial.println("SVEGLIA]");
-
-        
+    
     }
 }
 
@@ -274,25 +206,20 @@ void taskValuate(TimerHandle_t xTimer){
 }
 
 void setup(){
-    for(int i = 0 ; i<10; i++){
-      imp_sum += imp[i];
-    }
 
     Serial.begin(115200);
     fireSelector();
     fogSelector();
     init_fixture();
-    buffer = (double*)calloc(SAMPLES,sizeof(double));
+    buffer = (float*)calloc(SAMPLES,sizeof(float));
     
     buffer_mtx = xSemaphoreCreateMutex();                               /* semaphores for buffer*/
     new_data_mtx = xSemaphoreCreateBinary();
-    bpm_mtx = xSemaphoreCreateMutex();
     mov_mtx = xSemaphoreCreateBinary();
     color_mtx = xSemaphoreCreateBinary();
 
     xSemaphoreGive(buffer_mtx);
-    xSemaphoreGive(bpm_mtx); 
-
+    
     xTaskCreate(taskInputRecording, "inputRec", 200/*160*/, NULL, 1, NULL); 
     //this task must have higher priority than inputRec bc otherwise it doesn't run
     xTaskCreate(taskInputProcessing, "inputProc", 16000, NULL,1 , NULL);
