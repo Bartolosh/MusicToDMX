@@ -5,6 +5,7 @@
 #include <string.h>
 #include "arduinoFFT.h"
 #include "manage_output.h"
+#include "list.h"
 #include "fog.h"
 #include "fire.h"
 
@@ -19,8 +20,11 @@ SemaphoreHandle_t bpm_mtx;
 SemaphoreHandle_t color_mtx;
 SemaphoreHandle_t mov_mtx;
 double *buffer;
-double max_peak = 0, mean_peak = 0, mean_peak_prev = 0;
+double max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int n = 0, counter_peaks_buffer = 0;
+
+float imp[10] = {0.3,0.4,0.4,0.4,0.5,0.6,0.7,0.8,0.9,1};
+list *peak_arr;
 
 arduinoFFT FFT = arduinoFFT();
 unsigned long start;
@@ -86,28 +90,35 @@ void taskInputProcessing(void *pvParameters){
 
     FFT.Compute(buffer,buffer_im,SAMPLES, FFT_FORWARD);
 
-    FFT.ComplexToMagnitude(buffer,buffer_im,SAMPLES);
-    
+    FFT.ComplexToMagnitude(buffer,bufload
     //TODO: need to fine tune the third param
     //TODO: need to focus only on bass peak (freq 50Hz - 200Hz)
     double peak = FFT.MajorPeak(buffer,SAMPLES,9600);
     /*if (peak > max_peak){
         max_peak = peak;
     }*/
+    delete_last(peak_arr);
+    peak_arr = add_first(peak);
     n++;
     mean_peak_prev = mean_peak;
-    mean_peak = mean_peak + (peak -  mean_peak)/n;
     if(n>10){
-    //everytime it detect a peak it let lights change 
-    for(int i = 0; i < SAMPLES; i++){
-      if(buffer[i] >= mean_peak){ //only one time for rec maybe
-        counter_peaks_buffer++;
-        xSemaphoreGive(color_mtx);
-        //Serial.println((String) "Peaks counter: "+ counter_peaks_buffer);
+      mean_peak = 0;
+      list *l = peak_arr; 
+      for(int i = 0;i<10; i++){
+        mean_peak += imp[i]*l->value;
+        l = l->next; 
       }
+      mean_peak = mean_peak/imp_sum; //media pesata
+      //everytime it detect a peak it let lights change 
+      for(int i = 0; i < SAMPLES; i++){
+        if(buffer[i] >= mean_peak){ //only one time for rec maybe, maybe useful if use only peak
+          counter_peaks_buffer++;
+          xSemaphoreGive(color_mtx);
+        }
     }
     //Serial.println((String)"prev peak = " + mean_peak_prev + "  mean peak now = " + mean_peak);
-    //check if is changed the rhythm of the song to change mov
+    //check if is changed the rhythm of the song to change mov 
+    //control if with average or with peack value
     if(mean_peak - mean_peak_prev >= THRESHOLD_MEAN ){
       xSemaphoreGive(mov_mtx);
     }
@@ -260,6 +271,10 @@ void taskValuate(TimerHandle_t xTimer){
 }
 
 void setup(){
+    for(int i = 0 ; i<10; i++){
+      imp_sum += imp[i];
+    }
+
     Serial.begin(115200);
     fireSelector();
     fogSelector();
