@@ -8,6 +8,7 @@
 #include "list_custom.h"
 #include "fog.h"
 #include "fire.h"
+#include "LowPassFilter.h"
 
 #define SAMPLES 2048
 #define FRAME_LENGTH 100
@@ -20,6 +21,7 @@ SemaphoreHandle_t bpm_mtx;
 SemaphoreHandle_t color_mtx;
 SemaphoreHandle_t mov_mtx;
 
+LowPassFilter *filter;
 double *buffer;
 double max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int n = 0, counter_peaks_buffer = 0;
@@ -42,6 +44,7 @@ int16_t bpm = 120;
 void taskInputRecording(void *pvParameters){
     //Serial.println("readIMU "+ String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
     uint16_t c = 0;
+    int filtered;
 
     TickType_t xLastWakeTime;
     unsigned long startTime = 0;
@@ -80,6 +83,8 @@ void taskInputProcessing(void *pvParameters){
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
   
+  double filtered, peak_fil, max_peak_fil, min_peak_fil;
+
   while(true){
     Serial.println("processing");
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
@@ -88,6 +93,14 @@ void taskInputProcessing(void *pvParameters){
     memset(buffer_im, 0, SAMPLES*sizeof(double));
 
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
+    
+    for(int i = 0; i < SAMPLES; i++){
+      LowPassFilter_put(filter,buffer[i]);
+      filtered = LowPassFilter_get(filter);
+      peak_fil = max(peak_fil, filtered);
+    }
+    max_peak_fil = max(max_peak_fil,peak_fil);
+    min_peak_fil = min(min_peak_fil, peak_fil);
     
     FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
 
@@ -100,11 +113,22 @@ void taskInputProcessing(void *pvParameters){
     /*if (peak > max_peak){
         max_peak = peak;
     }*/
+
+    Serial.println((String) "Comparison peaks: peak --> "+peak+" peak_fil --> "+peak_fil);
     
     peak_arr = add_first(peak_arr,peak);
     Serial.print("add an element to list  ");
     Serial.println(n);
     n++;
+
+    /* Each 1000 iterations, reset the minimum and maximum detected values.
+     This helps if the sound level changes and we want our code to adapt to it.*/
+
+    if((n%1000) == 0){
+      max_peak_fil = 0;
+      min_peak_fil = 1023;
+    }
+
     mean_peak_prev = mean_peak;
     if(n>10){
       delete_last(peak_arr);
@@ -283,7 +307,9 @@ void setup(){
     fogSelector();
     init_fixture();
     buffer = (double*)calloc(SAMPLES,sizeof(double));
-    
+    filter = new LowPassFilter();
+    LowPassFilter_init(filter);
+
     buffer_mtx = xSemaphoreCreateMutex();                               /* semaphores for buffer*/
     new_data_mtx = xSemaphoreCreateBinary();
     bpm_mtx = xSemaphoreCreateMutex();
