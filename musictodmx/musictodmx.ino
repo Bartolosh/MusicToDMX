@@ -26,7 +26,7 @@ double *buffer;
 double max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int n = 0, counter_peaks_buffer = 0;
 
-float imp[10] = {1,0.9,0.8,0.7,0.6,0.5,0.4,0.4,0.4,0.3};
+float imp[10] = {1,0.9,0.8,0.7,0.7,0.5,0.4,0.4,0.4,0.3};
 list *peak_arr;
 
 arduinoFFT FFT = arduinoFFT();
@@ -79,7 +79,7 @@ void taskInputRecording(void *pvParameters){
 }
 
 void taskInputProcessing(void *pvParameters){
-  double buffer_im[SAMPLES];
+  //double buffer_im[SAMPLES];
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
   
@@ -89,11 +89,11 @@ void taskInputProcessing(void *pvParameters){
     Serial.println("processing");
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     
-    startTime = micros();
-    memset(buffer_im, 0, SAMPLES*sizeof(double));
+    startTime = millis();
+    //memset(buffer_im, 0, SAMPLES*sizeof(double));
 
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-    
+    peak_fil = 0;
     for(int i = 0; i < SAMPLES; i++){
       LowPassFilter_put(filter,buffer[i]);
       filtered = LowPassFilter_get(filter);
@@ -102,7 +102,7 @@ void taskInputProcessing(void *pvParameters){
     max_peak_fil = max(max_peak_fil,peak_fil);
     min_peak_fil = min(min_peak_fil, peak_fil);
     
-    FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
+    /*FFT.Windowing(buffer,SAMPLES,FFT_WIN_TYP_HAMMING,FFT_FORWARD);
 
     FFT.Compute(buffer,buffer_im,SAMPLES, FFT_FORWARD);
 
@@ -110,13 +110,10 @@ void taskInputProcessing(void *pvParameters){
     //TODO: need to fine tune the third param
     //TODO: need to focus only on bass peak (freq 50Hz - 200Hz)
     double peak = FFT.MajorPeak(buffer,SAMPLES,9600);
-    /*if (peak > max_peak){
-        max_peak = peak;
-    }*/
 
     Serial.println((String) "Comparison peaks: peak --> "+peak+" peak_fil --> "+peak_fil);
-    
-    peak_arr = add_first(peak_arr,peak);
+    */
+    peak_arr = add_first(peak_arr,peak_fil);
     Serial.print("add an element to list  ");
     Serial.println(n);
     n++;
@@ -146,7 +143,7 @@ void taskInputProcessing(void *pvParameters){
           xSemaphoreGive(color_mtx);
         }
       }*/
-      if(peak >= mean_peak-50){
+      if(peak_fil >= mean_peak-30){
         xSemaphoreGive(color_mtx);
       }
     //Serial.println((String)"prev peak = " + mean_peak_prev + "  mean peak now = " + mean_peak);
@@ -158,12 +155,15 @@ void taskInputProcessing(void *pvParameters){
     }
     xSemaphoreGive(buffer_mtx);
     xSemaphoreTake(bpm_mtx,portMAX_DELAY);
-    finishTime = (micros() - startTime)/1000;
+    //finishTime = (millis() - startTime)/1000;
+    finishTime = millis();
     bpm = counter_peaks_buffer * 60/finishTime;
+    float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
+    Serial.println((String)"FREQ  " + freq);
     //Serial.println((String) "Task ProcessingInput elapsed: "+ finishTime + " ms");
     xSemaphoreGive(bpm_mtx);
     
-    Serial.println((String)"Peak value: " + peak);
+    Serial.println((String)"Peak value: " + peak_fil);
   
     //Serial.println((String)"Counter peaks for average: " + n + "in "+finish+" s");
     
@@ -276,10 +276,10 @@ void taskFire(void *pvParameters) {
 void taskValuate(TimerHandle_t xTimer){
 
 
-    Serial.print("inputRec " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
+    //Serial.print("inputRec " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
 
 
-    Serial.print("inputProc " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputProc"))));
+    // Serial.print("inputProc " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputProc"))));
 
 
     unsigned long startTime = 0;
@@ -291,10 +291,10 @@ void taskValuate(TimerHandle_t xTimer){
     // Insert code to test here
     for(int k=0; k<SAMPLES; k++){
       buffer[k] = (double) analogRead(A0);
-      LowPassFilter_put(filter, buffer[k]);
-      filtered = LowPassFilter_get(filter);
+      //LowPassFilter_put(filter, buffer[k]);
+      //filtered = LowPassFilter_get(filter);
 
-      peak = max(peak, filtered);
+      //peak = max(peak, filtered);
     }
     finishTime = millis();
     maxTime = max(finishTime - startTime, maxTime);
@@ -333,7 +333,7 @@ void setup(){
     xTaskCreate(taskInputProcessing, "inputProc", 16000, NULL,1 , NULL);
     //ELABORATION TASK 
     xTaskCreate(taskSendingOutput, "outputSend", 200, NULL, 3, NULL); 
-    //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 3, taskValuate);
+    //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, (void*)3, taskValuate);
     //xTimerStart(xTimer, 0);   
     
     xTaskCreate(taskFog, "fogStart", 80, NULL, 4, &taskFogHandle);

@@ -20,7 +20,7 @@ sampling frequency: 10000 Hz
 
 */
 
-#define LOWPASSFILTER_TAP_NUM 117
+#define LOWPASSFILTER_TAP_NUM 39
 
 typedef struct {
   double history[LOWPASSFILTER_TAP_NUM];
