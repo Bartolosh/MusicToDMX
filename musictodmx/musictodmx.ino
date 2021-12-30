@@ -78,6 +78,7 @@ void taskInputProcessing(void *pvParameters){
   double buffer_im[SAMPLES];
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
+  
   while(true){
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     

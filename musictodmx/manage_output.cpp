@@ -37,6 +37,9 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode){
     // check if need to change light
     if(light_mode){
         color = rand() % 6 +1;
+        if(color == par1.current_color ){
+          color = (color + 1)% 6 +1;
+        }
         par1.current_color = color;
     }
     else{
