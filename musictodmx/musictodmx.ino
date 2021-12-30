@@ -93,7 +93,7 @@ void taskInputProcessing(void *pvParameters){
     memset(buffer_im, 0, SAMPLES*sizeof(double));
 
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-    
+    peak_fil = 0;
     for(int i = 0; i < SAMPLES; i++){
       LowPassFilter_put(filter,buffer[i]);
       filtered = LowPassFilter_get(filter);
@@ -114,7 +114,8 @@ void taskInputProcessing(void *pvParameters){
         max_peak = peak;
     }*/
 
-    Serial.println((String) "Comparison peaks: peak --> "+peak+" peak_fil --> "+peak_fil);
+    Serial.println((String) "Comparison peaks: peak --> "+peak);
+    Serial.println((String)" max_peak_fil --> "+peak_fil);
     
     peak_arr = add_first(peak_arr,peak);
     Serial.print("add an element to list  ");
