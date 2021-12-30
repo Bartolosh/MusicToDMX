@@ -1,10 +1,10 @@
-#include "list.h"
+#include "list_custom.h"
 
 void delete_last(list *l){
     
     list *prev;
 
-    while(l->next == NULL){
+    while(l->next != NULL){
         prev = l;
         l = l->next;
     }

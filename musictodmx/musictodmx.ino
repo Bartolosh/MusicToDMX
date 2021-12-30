@@ -5,7 +5,7 @@
 #include <string.h>
 #include "arduinoFFT.h"
 #include "manage_output.h"
-#include "list.h"
+#include "list_custom.h"
 #include "fog.h"
 #include "fire.h"
 
@@ -19,11 +19,12 @@ SemaphoreHandle_t new_data_mtx;
 SemaphoreHandle_t bpm_mtx;
 SemaphoreHandle_t color_mtx;
 SemaphoreHandle_t mov_mtx;
+
 double *buffer;
 double max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int n = 0, counter_peaks_buffer = 0;
 
-float imp[10] = {0.3,0.4,0.4,0.4,0.5,0.6,0.7,0.8,0.9,1};
+float imp[10] = {1,0.9,0.8,0.7,0.6,0.5,0.4,0.4,0.4,0.3};
 list *peak_arr;
 
 arduinoFFT FFT = arduinoFFT();
@@ -58,7 +59,7 @@ void taskInputRecording(void *pvParameters){
             //Serial.println((String)"Read n." + c + ": "+buffer[c] );
             c++;
         }
-        //Serial.println("BUFFER FULL");
+        Serial.println("BUFFER FULL");
         c=0;
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
             xSemaphoreGive(new_data_mtx);
@@ -80,6 +81,7 @@ void taskInputProcessing(void *pvParameters){
   unsigned long finishTime = 0;
   
   while(true){
+    Serial.println("processing");
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     
     startTime = micros();
@@ -91,18 +93,21 @@ void taskInputProcessing(void *pvParameters){
 
     FFT.Compute(buffer,buffer_im,SAMPLES, FFT_FORWARD);
 
-    FFT.ComplexToMagnitude(buffer,bufload
+    FFT.ComplexToMagnitude(buffer,buffer_im,SAMPLES);
     //TODO: need to fine tune the third param
     //TODO: need to focus only on bass peak (freq 50Hz - 200Hz)
     double peak = FFT.MajorPeak(buffer,SAMPLES,9600);
     /*if (peak > max_peak){
         max_peak = peak;
     }*/
-    delete_last(peak_arr);
-    peak_arr = add_first(peak);
+    
+    peak_arr = add_first(peak_arr,peak);
+    Serial.print("add an element to list  ");
+    Serial.println(n);
     n++;
     mean_peak_prev = mean_peak;
     if(n>10){
+      delete_last(peak_arr);
       mean_peak = 0;
       list *l = peak_arr; 
       for(int i = 0;i<10; i++){
@@ -111,12 +116,15 @@ void taskInputProcessing(void *pvParameters){
       }
       mean_peak = mean_peak/imp_sum; //media pesata
       //everytime it detect a peak it let lights change 
-      for(int i = 0; i < SAMPLES; i++){
+      /*for(int i = 0; i < SAMPLES; i++){
         if(buffer[i] >= mean_peak){ //only one time for rec maybe, maybe useful if use only peak
           counter_peaks_buffer++;
           xSemaphoreGive(color_mtx);
         }
-    }
+      }*/
+      if(peak >= mean_peak-50){
+        xSemaphoreGive(color_mtx);
+      }
     //Serial.println((String)"prev peak = " + mean_peak_prev + "  mean peak now = " + mean_peak);
     //check if is changed the rhythm of the song to change mov 
     //control if with average or with peack value
@@ -189,12 +197,6 @@ void taskSendingOutput(void *pvParameters){
         
         send_output(bpm, light_mode, mov_mode);
 
-        
-        
-        vTaskDelayUntil(&xLastWakeTime, xFreq);
-        finishTime = (micros() - startTime) / 1000;
-        Serial.println((String) "Task sendOutput time elapse: " + finishTime + " s");
-
         Serial.println(bpm);
         finishTime = (micros() - startTime) / 1000;
         Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");
@@ -264,7 +266,7 @@ void taskValuate(TimerHandle_t xTimer){
     // Insert code to test here
     finishTime = micros();
     maxTime = max(finishTime - startTime, maxTime);
-    
+ 
     Serial.println((String)"MaxTime: " + (maxTime/1000000)+ " s");
     
     Serial.print("    ");
@@ -291,11 +293,11 @@ void setup(){
     xSemaphoreGive(buffer_mtx);
     xSemaphoreGive(bpm_mtx); 
 
-    xTaskCreate(taskInputRecording, "inputRec", 500/*160*/, NULL, 1, NULL); 
+    xTaskCreate(taskInputRecording, "inputRec", 200/*160*/, NULL, 1, NULL); 
     //this task must have higher priority than inputRec bc otherwise it doesn't run
-    xTaskCreate(taskInputProcessing, "inputProc", 5000, NULL,1 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc", 16000, NULL,1 , NULL);
     //ELABORATION TASK 
-    xTaskCreate(taskSendingOutput, "outputSend", 500, NULL, 3, NULL); 
+    xTaskCreate(taskSendingOutput, "outputSend", 200, NULL, 3, NULL); 
     //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 3, taskValuate);
     //xTimerStart(xTimer, 0);   
     

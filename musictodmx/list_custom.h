@@ -2,7 +2,7 @@
 
 typedef struct list_t{
     double value;
-    list_t *next;
+    struct list_t *next;
 }list;
 
 void delete_last(list *l);
