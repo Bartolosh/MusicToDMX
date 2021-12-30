@@ -24,7 +24,7 @@ double *buffer;
 double max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int n = 0, counter_peaks_buffer = 0;
 
-float imp[10] = {1,0.9,0.8,0.7,0.6,0.5,0.4,0.4,0.4,0.3};
+float imp[10] = {1,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.3,0.2};
 list *peak_arr;
 
 arduinoFFT FFT = arduinoFFT();
@@ -122,7 +122,7 @@ void taskInputProcessing(void *pvParameters){
           xSemaphoreGive(color_mtx);
         }
       }*/
-      if(peak >= mean_peak-50){
+      if(peak >= mean_peak-30){
         xSemaphoreGive(color_mtx);
       }
     //Serial.println((String)"prev peak = " + mean_peak_prev + "  mean peak now = " + mean_peak);
