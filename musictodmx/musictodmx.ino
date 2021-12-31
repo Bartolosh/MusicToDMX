@@ -26,7 +26,7 @@ double *buffer;
 double max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int n = 0, counter_peaks_buffer = 0;
 
-float imp[10] = {1,0.9,0.8,0.7,0.6,0.5,0.4,0.4,0.4,0.3};
+float imp[10] = {1,0.9,0.8,0.7,0.5,0.5,0.4,0.4,0.4,0.3};
 list *peak_arr;
 
 arduinoFFT FFT = arduinoFFT();
@@ -36,7 +36,7 @@ HardwareSerial Serial4(D0, D1);
 RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
 
 //try to set a default value
-int16_t bpm = 120;
+uint16_t bpm = 120;
 
 /*-------------------- PERIODIC TASK ------------------------*/
 
@@ -49,7 +49,7 @@ void taskInputRecording(void *pvParameters){
     TickType_t xLastWakeTime;
     unsigned long startTime = 0;
     unsigned long finishTime = 0;
-    // xFreq is set to 1/4 of seconds but need to be set after timer analysis of processing and output
+    // xFreq is set to 1/4anzi  of seconds but need to be set after timer analysis of processing and output
     TickType_t xFreq = 250 / (portTICK_PERIOD_MS);
 
 
@@ -81,7 +81,8 @@ void taskInputRecording(void *pvParameters){
 void taskInputProcessing(void *pvParameters){
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
-  
+  unsigned long lastChange = 0;
+  unsigned long thisChange = 0;
   double filtered, peak_fil, max_peak_fil, min_peak_fil;
 
   while(true){
@@ -104,7 +105,7 @@ void taskInputProcessing(void *pvParameters){
     
     n++;
 
-    /* Each 1000 iterations, reset the minimum and maximum detected values.
+    /* Each 1000 iterations, 0.004546528053599695,reset the minimum and maximum detected values.
      This helps if the sound level changes and we want our code to adapt to it.*/
 
     if((n%1000) == 0){
@@ -129,7 +130,19 @@ void taskInputProcessing(void *pvParameters){
           xSemaphoreGive(color_mtx);
         }
       }*/
-      if(peak_fil >= mean_peak-30){
+      if(peak_fil >= (mean_peak)){
+        xSemaphoreTake(bpm_mtx,portMAX_DELAY);
+        if(lastChange == 0){
+            lastChange = millis();
+          }
+          else{
+            thisChange = millis();
+            bpm = 60000/(thisChange-lastChange);
+            lastChange = thisChange;
+            Serial.println((String)"bpm = " + bpm);
+            
+         }
+        xSemaphoreGive(bpm_mtx);
         xSemaphoreGive(color_mtx);
       }
     Serial.println((String)"dif = " + (mean_peak-peak_fil));
@@ -140,14 +153,14 @@ void taskInputProcessing(void *pvParameters){
     }
     }
     xSemaphoreGive(buffer_mtx);
-    xSemaphoreTake(bpm_mtx,portMAX_DELAY);
+    
     //finishTime = (millis() - startTime)/1000;
     finishTime = millis();
-    bpm = counter_peaks_buffer * 60/finishTime;
+   
     float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
     Serial.println((String)"FREQ  " + freq);
     //Serial.println((String) "Task ProcessingInput elapsed: "+ finishTime + " ms");
-    xSemaphoreGive(bpm_mtx);
+    
     
     Serial.println((String)"Peak value: " + peak_fil);
 
@@ -166,8 +179,7 @@ void taskInputProcessing(void *pvParameters){
 void taskSendingOutput(void *pvParameters){
     
     TickType_t xLastWakeTime;
-    unsigned long startTime = 0;
-    unsigned long finishTime = 0;
+    
     TickType_t xFreq;
 
 
@@ -176,23 +188,18 @@ void taskSendingOutput(void *pvParameters){
     while(true){
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
         
-        startTime = micros();
-        xFreq = MS_IN_MIN / (300*portTICK_PERIOD_MS);
-        
-        //we don't use bpm anymore
-        xSemaphoreGive(bpm_mtx);
-        
-        //Serial.println((String)"bpm = " + bpm);
-        //Serial.println((String)"xFreq = " + xFreq  +" time elapsed= "+finishTime);
+        xFreq = MS_IN_MIN / (1000*portTICK_PERIOD_MS);
         
         if(uxSemaphoreGetCount(color_mtx) > 0){
+          
           xSemaphoreTake(color_mtx,portMAX_DELAY);
+          
           light_mode = 1;
         }
         else{
           light_mode = 0;
         }
-
+        xSemaphoreGive(bpm_mtx);
         if(uxSemaphoreGetCount(mov_mtx) > 0){
           xSemaphoreTake(mov_mtx,portMAX_DELAY);
           //TODO: add call for change mov speed
@@ -204,7 +211,6 @@ void taskSendingOutput(void *pvParameters){
         
         send_output(bpm, light_mode, mov_mode);
 
-        finishTime = (micros() - startTime) / 1000;
         //Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");
         
         vTaskDelayUntil(&xLastWakeTime, xFreq);
