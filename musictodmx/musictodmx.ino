@@ -26,7 +26,7 @@ double *buffer;
 double max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int n = 0, counter_peaks_buffer = 0;
 
-float imp[10] = {1,0.9,0.8,0.7,0.7,0.5,0.4,0.4,0.4,0.3};
+float imp[10] = {1,0.9,0.8,0.7,0.6,0.5,0.4,0.4,0.4,0.3};
 list *peak_arr;
 
 arduinoFFT FFT = arduinoFFT();
@@ -101,6 +101,7 @@ void taskInputProcessing(void *pvParameters){
     min_peak_fil = min(min_peak_fil, peak_fil);
     
     peak_arr = add_first(peak_arr,peak_fil);
+    
     n++;
 
     /* Each 1000 iterations, reset the minimum and maximum detected values.
@@ -131,7 +132,7 @@ void taskInputProcessing(void *pvParameters){
       if(peak_fil >= mean_peak-30){
         xSemaphoreGive(color_mtx);
       }
-    //Serial.println((String)"prev peak = " + mean_peak_prev + "  mean peak now = " + mean_peak);
+    Serial.println((String)"dif = " + (mean_peak-peak_fil));
     //check if is changed the rhythm of the song to change mov 
     //control if with average or with peack value
     if(mean_peak - mean_peak_prev >= THRESHOLD_MEAN ){

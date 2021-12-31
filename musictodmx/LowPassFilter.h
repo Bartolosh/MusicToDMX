@@ -20,7 +20,7 @@ sampling frequency: 10000 Hz
 
 */
 
-#define LOWPASSFILTER_TAP_NUM 71
+#define LOWPASSFILTER_TAP_NUM 69
 
 
 typedef struct {
