@@ -9,6 +9,8 @@ void init_movinghead(moving_head *head, int start_address){
     head->ch_tilt = start_address + 2;
     head->ch_speed = start_address + 4;
     head->state = ROTATE1;
+    head->mov = ROTATE;
+    head->hold = 0;
 }
 
 void set_color(moving_head head,uint8_t color){
@@ -40,33 +42,65 @@ void set_color(moving_head head,uint8_t color){
 void rotate(moving_head *head, uint8_t speed, uint8_t color){
     set_color(*head, color);
     //DmxSimple.write(head->ch_speed, speed);
-
+    DMX.write(head->ch_speed, speed);
+    
     //TODO: controllare valori per posizioni
     switch(head->state){
         case ROTATE1:
             DMX.write(head->ch_pan, 114);
             DMX.write(head->ch_tilt, 207);
-            head->state = ROTATE2;
+            if(head->hold <HOLD){
+              head->hold ++;
+            }
+            else{
+              head->hold = 0;
+              head->state = ROTATE2;
+            }
             break;
         case ROTATE2:
             DMX.write(head->ch_pan, 89);
             DMX.write(head->ch_tilt, 229);
-            head->state = ROTATE3;
+            if(head->hold <HOLD){
+              head->hold ++;
+            }
+            else{
+              head->hold = 0;
+              head->state = ROTATE3;
+            }
             break;
         case ROTATE3:
             DMX.write(head->ch_pan, 69);
             DMX.write(head->ch_tilt, 216);
-            head->state = ROTATE4;
+            if(head->hold <HOLD){
+              head->hold ++;
+            }
+            else{
+              head->hold = 0;
+              head->state = ROTATE4;
+            }
             break;
         case ROTATE4:
             DMX.write(head->ch_pan, 87);
             DMX.write(head->ch_tilt, 208);
-            head->state = ROTATE1;
+            if(head->hold <HOLD){
+              head->hold ++;
+            }
+            else{
+              head->hold = 0;
+              head->state = ROTATE1;
+            }
             break;
         default:
             DMX.write(head->ch_pan, 87);
             DMX.write(head->ch_tilt, 208);
-            head->state = ROTATE1;
+            if(head->hold <HOLD){
+              head->hold ++;
+            }
+            else{
+              head->hold = 0;
+              head->state = ROTATE1;
+            }
+
             break;
     }
 }
@@ -80,7 +114,7 @@ void strobe_head(moving_head head, uint8_t speed, uint8_t color){
 void up_down(moving_head *head, uint8_t color, uint8_t speed){
     set_color(*head, color);
 
-    DMX.write(head->ch_speed, speed);
+    DMX.write(head->ch_speed, 150);
 
     //TODO: controllare valori per posizioni
     switch(head->state){

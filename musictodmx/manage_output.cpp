@@ -51,10 +51,10 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode){
     // check if need to change mov
     if(mov_mode){
         mov = rand() % 2 +1;
-        mov1.state = mov;
+        mov1.mov = mov;
     }
     else{
-        mov = mov1.state;
+        mov = mov1.mov;
     }
 
     int mov_col = 0;

@@ -10,6 +10,11 @@
 #include "color.h"
 #include <stdlib.h> //usata per random
 
+#define HOLD  5
+
+#define ROTATE    1
+#define UP_DOWN   2
+
 
 #define ROTATE1     1
 #define ROTATE2     2
@@ -40,6 +45,8 @@ typedef struct{
     int ch_tilt;
     int ch_speed;
     int state;
+    int mov;
+    uint8_t hold;
 }moving_head;
 
 

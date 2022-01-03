@@ -13,8 +13,8 @@
 #define SAMPLES 2048
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
-#define THRESHOLD_MEAN 200    //TODO: need to be checked if it is good enough
-#define THRESHOLD 550 //TUNE IT define a peak
+#define THRESHOLD_MOV 200    //TODO: need to be checked if it is good enough
+#define THRESHOLD 500 //TUNE IT define a peak
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
@@ -27,10 +27,6 @@ int *buffer;
 int max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int min_peak = 0;
 int n = 0, counter_peaks_buffer = 0;
-
-float imp[10] = {1,0.9,0.8,0.7,0.5,0.5,0.4,0.4,0.4,0.3};
-list *peak_arr;
-
 
 unsigned long startTime = 0;
 unsigned long finishTime = 0;
@@ -85,6 +81,8 @@ void taskInputProcessing(void *pvParameters){
   unsigned long thisChange = 0;
   int filtered, peak_fil, max_peak_fil, min_peak_fil;
 
+  long lvl_sound = 0, peak_to_peak = 0;
+
   max_peak_fil = 0;
   min_peak_fil = 1023;
 
@@ -93,32 +91,46 @@ void taskInputProcessing(void *pvParameters){
 
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     peak_fil = 0;
+    
     for(int i = 0; i < SAMPLES; i++){
+      
       LowPassFilter_put(filter,buffer[i]);
       filtered = LowPassFilter_get(filter);
       peak_fil = max(peak_fil, filtered);
+      
     }
     xSemaphoreGive(buffer_mtx);
     max_peak_fil = max(max_peak_fil,peak_fil);
     min_peak_fil = min(min_peak_fil, peak_fil);
     
-    //peak_arr = add_first(peak_arr,peak_fil);
-    
+
     n++;
 
     /* Each 1000 iterations,reset the minimum and maximum detected values.
      This helps if the sound level changes and we want our code to adapt to it.*/
 
     if((n%1000) == 0){
+      lvl_sound = 0;
       max_peak_fil = 0;
       min_peak_fil = 1023;
     }
 
     int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
     
-    if(lvl > THRESHOLD){ 
+    if(lvl > THRESHOLD){
+      
       xSemaphoreGive(color_mtx);
+      thisChange = millis();
+      peak_to_peak = thisChange-lastChange;
+      lastChange = thisChange;
     }
+    if(peak_to_peak > (lvl_sound - THRESHOLD_MOV)){
+      lvl_sound = peak_to_peak;
+      peak_to_peak = 0;
+      Serial.println("Change mov");
+      xSemaphoreGive(mov_mtx);
+    }
+    Serial.println((String)"sound: " + lvl_sound + " new = " + peak_to_peak);
     /*mean_peak_prev = mean_peak;
     if(n>10){
       delete_last(peak_arr);
@@ -164,7 +176,6 @@ void taskInputProcessing(void *pvParameters){
     
     Serial.println((String)"Peak value: " + peak_fil);
 
-    Serial.println((String)"Mean peak value: " + mean_peak);
     /*Serial.println("Spectrum values:");
     Serial.print("[");
     for(int i = 0 ; i < SAMPLES; i++){
@@ -291,10 +302,7 @@ void taskValuate(TimerHandle_t xTimer){
 }
 
 void setup(){
-    for(int i = 0 ; i<10; i++){
-      imp_sum += imp[i];
-    }
-
+    
     Serial.begin(115200);
     fireSelector();
     fogSelector();
