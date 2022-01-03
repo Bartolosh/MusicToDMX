@@ -14,6 +14,7 @@
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
 #define THRESHOLD_MEAN 200    //TODO: need to be checked if it is good enough
+#define THRESHOLD 550 //TUNE IT define a peak
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
@@ -22,15 +23,17 @@ SemaphoreHandle_t color_mtx;
 SemaphoreHandle_t mov_mtx;
 
 LowPassFilter *filter;
-double *buffer;
-double max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
+int *buffer;
+int max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
+int min_peak = 0;
 int n = 0, counter_peaks_buffer = 0;
 
 float imp[10] = {1,0.9,0.8,0.7,0.5,0.5,0.4,0.4,0.4,0.3};
 list *peak_arr;
 
-arduinoFFT FFT = arduinoFFT();
-unsigned long start;
+
+unsigned long startTime = 0;
+unsigned long finishTime = 0;
 
 HardwareSerial Serial4(D0, D1);
 RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
@@ -47,8 +50,6 @@ void taskInputRecording(void *pvParameters){
     int filtered;
 
     TickType_t xLastWakeTime;
-    unsigned long startTime = 0;
-    unsigned long finishTime = 0;
     // xFreq is set to 1/4anzi  of seconds but need to be set after timer analysis of processing and output
     TickType_t xFreq = 250 / (portTICK_PERIOD_MS);
 
@@ -56,7 +57,7 @@ void taskInputRecording(void *pvParameters){
     xLastWakeTime = xTaskGetTickCount();
     while(true){
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-        startTime = micros();
+        startTime = millis();
         while(c < SAMPLES){
             buffer[c] = (double)analogRead(A0);
             //Serial.println((String)"Read n." + c + ": "+buffer[c] );
@@ -69,7 +70,7 @@ void taskInputRecording(void *pvParameters){
         }
         //Serial.println("readIMU end task " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
         
-        finishTime = (micros() - startTime)/1000;
+        finishTime = (millis() - startTime)/1000;
         
         //Serial.println((String) "Task RecordingInput elapsed: "+ finishTime + " ms");
         xSemaphoreGive(buffer_mtx);
@@ -79,17 +80,16 @@ void taskInputRecording(void *pvParameters){
 }
 
 void taskInputProcessing(void *pvParameters){
-  unsigned long startTime = 0;
-  unsigned long finishTime = 0;
+  
   unsigned long lastChange = 0;
   unsigned long thisChange = 0;
-  double filtered, peak_fil, max_peak_fil, min_peak_fil;
+  int filtered, peak_fil, max_peak_fil, min_peak_fil;
+
+  max_peak_fil = 0;
+  min_peak_fil = 1023;
 
   while(true){
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
-    
-    startTime = millis();
-
 
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     peak_fil = 0;
@@ -98,14 +98,15 @@ void taskInputProcessing(void *pvParameters){
       filtered = LowPassFilter_get(filter);
       peak_fil = max(peak_fil, filtered);
     }
+    xSemaphoreGive(buffer_mtx);
     max_peak_fil = max(max_peak_fil,peak_fil);
     min_peak_fil = min(min_peak_fil, peak_fil);
     
-    peak_arr = add_first(peak_arr,peak_fil);
+    //peak_arr = add_first(peak_arr,peak_fil);
     
     n++;
 
-    /* Each 1000 iterations, 0.004546528053599695,reset the minimum and maximum detected values.
+    /* Each 1000 iterations,reset the minimum and maximum detected values.
      This helps if the sound level changes and we want our code to adapt to it.*/
 
     if((n%1000) == 0){
@@ -113,7 +114,12 @@ void taskInputProcessing(void *pvParameters){
       min_peak_fil = 1023;
     }
 
-    mean_peak_prev = mean_peak;
+    int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
+    
+    if(lvl > THRESHOLD){ 
+      xSemaphoreGive(color_mtx);
+    }
+    /*mean_peak_prev = mean_peak;
     if(n>10){
       delete_last(peak_arr);
       mean_peak = 0;
@@ -123,13 +129,7 @@ void taskInputProcessing(void *pvParameters){
         l = l->next; 
       }
       mean_peak = mean_peak/imp_sum; //media pesata
-      //everytime it detect a peak it let lights change 
-      /*for(int i = 0; i < SAMPLES; i++){
-        if(buffer[i] >= mean_peak){ //only one time for rec maybe, maybe useful if use only peak
-          counter_peaks_buffer++;
-          xSemaphoreGive(color_mtx);
-        }
-      }*/
+   
       if(peak_fil >= (mean_peak)){
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
         if(lastChange == 0){
@@ -151,8 +151,8 @@ void taskInputProcessing(void *pvParameters){
     if(mean_peak - mean_peak_prev >= THRESHOLD_MEAN ){
       xSemaphoreGive(mov_mtx);
     }
-    }
-    xSemaphoreGive(buffer_mtx);
+    }*/
+    
     
     //finishTime = (millis() - startTime)/1000;
     finishTime = millis();
@@ -299,7 +299,7 @@ void setup(){
     fireSelector();
     fogSelector();
     init_fixture();
-    buffer = (double*)calloc(SAMPLES,sizeof(double));
+    buffer = (int*)calloc(SAMPLES,sizeof(int));
     filter = new LowPassFilter();
     LowPassFilter_init(filter);
 
