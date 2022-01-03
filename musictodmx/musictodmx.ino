@@ -5,8 +5,7 @@
 #include <string.h>
 #include "arduinoFFT.h"
 #include "manage_output.h"
-#include "list_custom.h"
-#include "z_score.h"
+#include "beat_detection.h"
 #include "fog.h"
 #include "fire.h"
 
@@ -51,22 +50,47 @@ void taskInputRecording(void *pvParameters){
     xLastWakeTime = xTaskGetTickCount();
     while(true){
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-        startTime = micros();
-        while(c < SAMPLES){
-            buffer[c] = (float)analogRead(A0);
-            Serial.println(buffer[c]);
-            c++;
+        long currentAverage = 0;
+        long currentMaximum = 0;
+        long currentMinimum = MAXIMUM_SIGNAL_VALUE;
+        
+        for (int i = 0; i < FHT_N; i++) { // save 256 samples
+          
+          int k = analogRead(A0);
+          
+          currentMinimum = min(currentMinimum, (long)k);
+          currentMaximum = max(currentMaximum, (long)k);
+          currentAverage += k;
+          
+          k -= 0x0200; // form into a signed int
+          k <<= 6; // form into a 16b signed int
+          k <<= FreqGainFactorBits;
+          
+          fht_input[i] = k; // put real data into bins
         }
-      
+  
+        currentAverage /= FHT_N;
+        
+        int signalDelta = currentMaximum - currentAverage;
+        currentSignal = currentAverage + (2 * signalDelta);
+        
+        constrain(currentSignal, 0, currentMaximum);
+        
+        processHistoryValues(
+          signals, 
+          frequencyMagnitudeSampleIndex, 
+          currentSignal, 
+          totalSignal, 
+          averageSignal, 
+          signalVariance
+        );
         //Serial.println("BUFFER FULL");
         c=0;
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
             xSemaphoreGive(new_data_mtx);
         }
         //Serial.println("readIMU end task " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
-        
-        finishTime = (micros() - startTime)/1000;
-        
+                
         //Serial.println((String) "Task RecordingInput elapsed: "+ finishTime + " ms");
         xSemaphoreGive(buffer_mtx);
         vTaskDelayUntil(&xLastWakeTime, xFreq);    
@@ -85,15 +109,11 @@ void taskInputProcessing(void *pvParameters){
 
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     
-    if(thresholding(buffer,lag,threshold,influence)){
-      xSemaphoreGive(color_mtx);
+    getFrequencyData();
+    processFrequencyData();
+    if(updateBeatProbability() == 1){
+        xSemaphoreGive(color_mtx);
     }
-    //Serial.println((String)"prev peak = " + mean_peak_prev + "  mean peak now = " + mean_peak);
-    //check if is changed the rhythm of the song to change mov 
-    //control if with average or with peack value
-    /*if(mean_peak - mean_peak_prev >= THRESHOLD_MEAN ){
-      xSemaphoreGive(mov_mtx);
-    }*/
     
     xSemaphoreGive(buffer_mtx);
 
@@ -206,7 +226,14 @@ void taskValuate(TimerHandle_t xTimer){
 }
 
 void setup(){
-
+    setupADC();
+    for (int i = 0; i < FREQUENCY_MAGNITUDE_SAMPLES; i++) {
+      overallFrequencyMagnitudes[i] = 0;
+      firstFrequencyMagnitudes[i] = 0;
+      secondFrequencyMagnitudes[i] = 0;
+      signals[i] = 0;
+    }
+  
     Serial.begin(115200);
     fireSelector();
     fogSelector();
@@ -256,3 +283,5 @@ void loop(){
 
     xSemaphoreGive(semDataProcess);*/
 }
+
+   
