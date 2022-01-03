@@ -123,6 +123,12 @@ void taskInputProcessing(void *pvParameters){
       thisChange = millis();
       peak_to_peak = thisChange-lastChange;
       lastChange = thisChange;
+      xSemaphoreTake(bpm_mtx,portMAX_DELAY);
+      
+      bpm = 60000/peak_to_peak;
+
+      xSemaphoreGive(bpm_mtx);
+      
     }
     if(peak_to_peak > (lvl_sound - THRESHOLD_MOV)){
       lvl_sound = peak_to_peak;

@@ -34,6 +34,8 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode){
     uint8_t color;
     int mov;
 
+    speed = map(speed, 70, 170, 190, 255);
+
     // check if need to change light
     if(light_mode){
         //Serial.println("change color");
