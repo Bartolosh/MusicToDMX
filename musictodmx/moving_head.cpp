@@ -114,9 +114,8 @@ void strobe_head(moving_head head, uint8_t speed, uint8_t color){
 void up_down(moving_head *head, uint8_t color, uint8_t speed){
     set_color(*head, color);
 
-    DMX.write(head->ch_speed, 150);
+    DMX.write(head->ch_speed, speed);
 
-    //TODO: controllare valori per posizioni
     switch(head->state){
         case UP1:
             DMX.write(head->ch_pan, 0);
@@ -135,3 +134,58 @@ void up_down(moving_head *head, uint8_t color, uint8_t speed){
             break;
     }
 }
+
+void sx_dx(moving_head *head, uint8_t color, uint8_t speed){
+    set_color(*head, color);
+
+    DMX.write(head->ch_speed, speed);
+
+    switch(head->state){
+        case SX:
+            DMX.write(head->ch_pan, 162);
+            DMX.write(head->ch_tilt, 31);
+            head->state = DX;
+            break;
+        case DX:
+            DMX.write(head->ch_pan, 202);
+            DMX.write(head->ch_tilt, 31);
+            head->state = SX;
+            break;
+        default:
+            DMX.write(head->ch_pan, 162);
+            DMX.write(head->ch_tilt, 31);
+            head->state = DX;
+            break;
+    }
+}
+
+
+void mov_v(moving_head *head, uint8_t color, uint8_t speed){
+    set_color(*head, color);
+
+    DMX.write(head->ch_speed, speed);
+
+    switch(head->state){
+        case V1:
+            DMX.write(head->ch_pan, 153);
+            DMX.write(head->ch_tilt, 39);
+            head->state = V2;
+            break;
+        case V2:
+            DMX.write(head->ch_pan, 162);
+            DMX.write(head->ch_tilt, 100);
+            head->state = V3;
+            break;
+        case V3:
+            DMX.write(head->ch_pan, 178);
+            DMX.write(head->ch_tilt, 35);
+            head->state = V1;
+            break;
+        default:
+            DMX.write(head->ch_pan, 153);
+            DMX.write(head->ch_tilt, 39);
+            head->state = V2;
+            break;
+    }
+}
+

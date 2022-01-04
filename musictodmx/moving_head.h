@@ -14,6 +14,8 @@
 
 #define ROTATE    1
 #define UP_DOWN   2
+#define SX_DX     3
+#define MOV_V     4
 
 
 #define ROTATE1     1
@@ -23,6 +25,14 @@
 
 #define UP1     5
 #define DOWN2   6
+
+#define SX      7
+#define DX      8
+
+#define V1      9
+#define V2      10
+#define V3      11
+
 
 #define RED_VALUE       35
 #define ORANGE_VALUE    50
@@ -59,5 +69,9 @@ void rotate(moving_head *head, uint8_t speed, uint8_t color);
 void strobe_head(moving_head head, uint8_t speed, uint8_t color);
 
 void up_down(moving_head *head, uint8_t color, uint8_t speed);
+
+void sx_dx(moving_head *head, uint8_t color, uint8_t speed);
+
+void mov_v(moving_head *head, uint8_t color, uint8_t speed){
 
 #endif
