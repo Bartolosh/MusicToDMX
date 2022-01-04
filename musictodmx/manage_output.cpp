@@ -60,7 +60,6 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode){
     }
 
     int mov_col = 0;
-    //Serial.println((String)"color = " + color + " mov = " + mov + " mov_col = " + mov_col);
 
     DMX.beginTransmission();
 
