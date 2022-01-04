@@ -30,7 +30,7 @@ void init_fixture(void){
 
 // mode = 1 --> random 
 // mode = 0 --> use current
-void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode){
+void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fog_state){
     uint8_t color;
     int mov;
 

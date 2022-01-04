@@ -22,6 +22,7 @@ SemaphoreHandle_t new_data_mtx;
 SemaphoreHandle_t bpm_mtx;
 SemaphoreHandle_t color_mtx;
 SemaphoreHandle_t mov_mtx;
+SemaphoreHandle_t fog_mtx;
 
 LowCutFilter *cutfilter;
 LowPassFilter *filter;
@@ -29,6 +30,7 @@ int *buffer;
 int max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int min_peak = 0;
 int n = 0, counter_peaks_buffer = 0;
+uint8_t fog_state = 0;
 
 unsigned long startTime = 0;
 unsigned long finishTime = 0;
@@ -144,42 +146,7 @@ void taskInputProcessing(void *pvParameters){
       xSemaphoreGive(mov_mtx);
     }
     Serial.println((String)"sound: " + lvl_sound + " new = " + peak_to_peak);
-    /*mean_peak_prev = mean_peak;
-    if(n>10){
-      delete_last(peak_arr);
-      mean_peak = 0;
-      list *l = peak_arr; 
-      for(int i = 0;i<10; i++){
-        mean_peak += imp[i]*l->value;
-        l = l->next; 
-      }
-      mean_peak = mean_peak/imp_sum; //media pesata
-   
-      if(peak_fil >= (mean_peak)){
-        xSemaphoreTake(bpm_mtx,portMAX_DELAY);
-        if(lastChange == 0){
-            lastChange = millis();
-          }
-          else{
-            thisChange = millis();
-            bpm = 60000/(thisChange-lastChange);
-            lastChange = thisChange;
-            Serial.println((String)"bpm = " + bpm);
-            
-         }
-        xSemaphoreGive(bpm_mtx);
-        xSemaphoreGive(color_mtx);
-      }
-    Serial.println((String)"dif = " + (mean_peak-peak_fil));
-    //check if is changed the rhythm of the song to change mov 
-    //control if with average or with peack value
-    if(mean_peak - mean_peak_prev >= THRESHOLD_MEAN ){
-      xSemaphoreGive(mov_mtx);
-    }
-    }*/
-    
-    
-    //finishTime = (millis() - startTime)/1000;
+
     finishTime = millis();
    
     float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
@@ -188,14 +155,6 @@ void taskInputProcessing(void *pvParameters){
     
     
     Serial.println((String)"Peak value: " + peak_fil);
-
-    /*Serial.println("Spectrum values:");
-    Serial.print("[");
-    for(int i = 0 ; i < SAMPLES; i++){
-        Serial.print(buffer[i]);
-        Serial.println(",");
-    }
-    Serial.println("]");*/
     
   }
 }
@@ -329,9 +288,11 @@ void setup(){
     buffer_mtx = xSemaphoreCreateMutex();                               /* semaphores for buffer*/
     new_data_mtx = xSemaphoreCreateBinary();
     bpm_mtx = xSemaphoreCreateMutex();
+    fog_mtx = xSemaphoreCreateMutex();
     mov_mtx = xSemaphoreCreateBinary();
     color_mtx = xSemaphoreCreateBinary();
 
+    xSemaphoreGive(fog_mtx);
     xSemaphoreGive(buffer_mtx);
     xSemaphoreGive(bpm_mtx); 
 

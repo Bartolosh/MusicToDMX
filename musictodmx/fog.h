@@ -9,6 +9,9 @@
 #define FOG_BUTTON_PIN      D3
 #define FOG_DURATION_TIME   1500 //milliseconds
 
+#define START   1
+#define STOP    0
+
 extern uint16_t fog_channel;
 extern TaskHandle_t taskFogHandle;
 

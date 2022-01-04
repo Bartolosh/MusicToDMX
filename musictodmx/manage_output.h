@@ -15,6 +15,6 @@ extern moving_head mov1;
 extern moving_head mov2; //todo control address
 
 
-void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode);
+void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fog_state);
 
 void init_fixture(void);
