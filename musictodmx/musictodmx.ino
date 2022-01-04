@@ -9,6 +9,7 @@
 #include "fog.h"
 #include "fire.h"
 #include "LowPassFilter.h"
+#include "LowCutFilter.h"
 
 #define SAMPLES 2048
 #define FRAME_LENGTH 100
@@ -22,6 +23,7 @@ SemaphoreHandle_t bpm_mtx;
 SemaphoreHandle_t color_mtx;
 SemaphoreHandle_t mov_mtx;
 
+LowCutFilter *cutfilter;
 LowPassFilter *filter;
 int *buffer;
 int max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
@@ -79,7 +81,7 @@ void taskInputProcessing(void *pvParameters){
   
   unsigned long lastChange = 0;
   unsigned long thisChange = 0;
-  int filtered, peak_fil, max_peak_fil, min_peak_fil;
+  int cutted,filtered, peak_fil, max_peak_fil, min_peak_fil;
 
   long lvl_sound = 0, peak_to_peak = 0;
 
@@ -91,10 +93,15 @@ void taskInputProcessing(void *pvParameters){
 
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     peak_fil = 0;
+
     
+
     for(int i = 0; i < SAMPLES; i++){
-      
-      LowPassFilter_put(filter,buffer[i]);
+      // cutting low freq (0 Hz -20 Hz)
+      LowCutFilter_put(cutfilter,buffer[i]);
+      cutted = LowCutFilter_get(cutfilter);
+      // filtering signal
+      LowPassFilter_put(filter,cutted);
       filtered = LowPassFilter_get(filter);
       peak_fil = max(peak_fil, filtered);
       
@@ -314,7 +321,9 @@ void setup(){
     fogSelector();
     init_fixture();
     buffer = (int*)calloc(SAMPLES,sizeof(int));
+    cutfilter = new LowCutFilter();
     filter = new LowPassFilter();
+    LowCutFilter_init(cutfilter);
     LowPassFilter_init(filter);
 
     buffer_mtx = xSemaphoreCreateMutex();                               /* semaphores for buffer*/
