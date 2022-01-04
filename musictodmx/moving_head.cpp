@@ -36,7 +36,7 @@ void set_color(moving_head head,uint8_t color){
             break;
     }
 
-    DMX.write(head.ch_dimmer, 255);
+    DMX.write(head.ch_dimmer, 20);
 }
 
 void rotate(moving_head *head, uint8_t speed, uint8_t color){

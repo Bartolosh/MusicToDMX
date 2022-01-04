@@ -13,8 +13,8 @@
 #define SAMPLES 2048
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
-#define THRESHOLD_MOV 200    //TODO: need to be checked if it is good enough
-#define THRESHOLD 500 //TUNE IT define a peak
+#define THRESHOLD_MOV 400    //TODO: need to be checked if it is good enough
+#define THRESHOLD 400 //TUNE IT define a peak
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
@@ -109,7 +109,7 @@ void taskInputProcessing(void *pvParameters){
     /* Each 1000 iterations,reset the minimum and maximum detected values.
      This helps if the sound level changes and we want our code to adapt to it.*/
 
-    if((n%1000) == 0){
+    if((n%600) == 0){
       lvl_sound = 0;
       max_peak_fil = 0;
       min_peak_fil = 1023;
