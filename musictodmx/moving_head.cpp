@@ -36,7 +36,7 @@ void set_color(moving_head head,uint8_t color){
             break;
     }
 
-    DMX.write(head.ch_dimmer, 20);
+    DMX.write(head.ch_dimmer, 100);
 }
 
 void rotate(moving_head *head, uint8_t speed, uint8_t color){
@@ -169,23 +169,58 @@ void mov_v(moving_head *head, uint8_t color, uint8_t speed){
         case V1:
             DMX.write(head->ch_pan, 153);
             DMX.write(head->ch_tilt, 39);
-            head->state = V2;
+            if(head->hold <HOLD){
+              head->hold ++;
+            }
+            else{
+              head->hold = 0;
+              head->state = V2;
+            }
             break;
         case V2:
             DMX.write(head->ch_pan, 162);
             DMX.write(head->ch_tilt, 100);
-            head->state = V3;
+            if(head->hold <HOLD){
+              head->hold ++;
+            }
+            else{
+              head->hold = 0;
+              head->state = V3;
+            }
             break;
         case V3:
             DMX.write(head->ch_pan, 178);
             DMX.write(head->ch_tilt, 35);
-            head->state = V1;
+            
+            if(head->hold <HOLD){
+              head->hold ++;
+            }
+            else{
+              head->hold = 0;
+              head->state = V4;
+            }
+            break;
+        case V4:
+            DMX.write(head->ch_pan, 162);
+            DMX.write(head->ch_tilt, 100);
+            if(head->hold <HOLD){
+              head->hold ++;
+            }
+            else{
+              head->hold = 0;
+              head->state = V1;
+            }
             break;
         default:
             DMX.write(head->ch_pan, 153);
             DMX.write(head->ch_tilt, 39);
-            head->state = V2;
+            if(head->hold <HOLD){
+              head->hold ++;
+            }
+            else{
+              head->hold = 0;
+              head->state = V2;
+            }
             break;
     }
 }
-

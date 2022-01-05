@@ -1,11 +1,11 @@
 #include "LowCutFilter.h"
 
 static int filter_taps[LOWCUTFILTER_TAP_NUM] = {
-  -15716,
-  -21,
-  32768,
-  -21,
-  -15716
+  -15671,
+  -121,
+  32661,
+  -121,
+  -15671
 };
 
 void LowCutFilter_init(LowCutFilter* f) {

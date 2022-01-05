@@ -15,14 +15,13 @@
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
 #define THRESHOLD_MOV 400    //TODO: need to be checked if it is good enough
-#define THRESHOLD 400 //TUNE IT define a peak
+#define THRESHOLD 250 //TUNE IT define a peak
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
 SemaphoreHandle_t bpm_mtx;
 SemaphoreHandle_t color_mtx;
 SemaphoreHandle_t mov_mtx;
-SemaphoreHandle_t fog_mtx;
 
 LowCutFilter *cutfilter;
 LowPassFilter *filter;
@@ -30,7 +29,6 @@ int *buffer;
 int max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int min_peak = 0;
 int n = 0, counter_peaks_buffer = 0;
-uint8_t fog_state = 0;
 
 unsigned long startTime = 0;
 unsigned long finishTime = 0;
@@ -89,6 +87,7 @@ void taskInputProcessing(void *pvParameters){
 
   max_peak_fil = 0;
   min_peak_fil = 1023;
+  uint8_t alterna = 0;
 
   while(true){
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
@@ -111,23 +110,25 @@ void taskInputProcessing(void *pvParameters){
     xSemaphoreGive(buffer_mtx);
     max_peak_fil = max(max_peak_fil,peak_fil);
     min_peak_fil = min(min_peak_fil, peak_fil);
-    
 
     n++;
 
     /* Each 1000 iterations,reset the minimum and maximum detected values.
      This helps if the sound level changes and we want our code to adapt to it.*/
-
-    if((n%600) == 0){
+    if((n%400) == 0){
       lvl_sound = 0;
+    }
+
+    if((n%700) == 0){
+      
       max_peak_fil = 0;
       min_peak_fil = 1023;
     }
 
     int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
+    Serial.println((String)"PEAK = " + lvl);
     
     if(lvl > THRESHOLD){
-      
       xSemaphoreGive(color_mtx);
       thisChange = millis();
       peak_to_peak = thisChange-lastChange;
@@ -142,11 +143,12 @@ void taskInputProcessing(void *pvParameters){
     if(peak_to_peak > (lvl_sound - THRESHOLD_MOV)){
       lvl_sound = peak_to_peak;
       peak_to_peak = 0;
-      Serial.println("Change mov");
+      //Serial.println("Change mov");
       xSemaphoreGive(mov_mtx);
     }
     Serial.println((String)"sound: " + lvl_sound + " new = " + peak_to_peak);
-
+    
+    //finishTime = (millis() - startTime)/1000;
     finishTime = millis();
    
     float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
@@ -154,7 +156,15 @@ void taskInputProcessing(void *pvParameters){
     //Serial.println((String) "Task ProcessingInput elapsed: "+ finishTime + " ms");
     
     
-    Serial.println((String)"Peak value: " + peak_fil);
+    //Serial.println((String)"Peak value: " + peak_fil);
+
+    /*Serial.println("Spectrum values:");
+    Serial.print("[");
+    for(int i = 0 ; i < SAMPLES; i++){
+        Serial.print(buffer[i]);
+        Serial.println(",");
+    }
+    Serial.println("]");*/
     
   }
 }
@@ -288,11 +298,9 @@ void setup(){
     buffer_mtx = xSemaphoreCreateMutex();                               /* semaphores for buffer*/
     new_data_mtx = xSemaphoreCreateBinary();
     bpm_mtx = xSemaphoreCreateMutex();
-    fog_mtx = xSemaphoreCreateMutex();
     mov_mtx = xSemaphoreCreateBinary();
     color_mtx = xSemaphoreCreateBinary();
 
-    xSemaphoreGive(fog_mtx);
     xSemaphoreGive(buffer_mtx);
     xSemaphoreGive(bpm_mtx); 
 

@@ -34,7 +34,7 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fo
     uint8_t color;
     int mov;
 
-    speed = map(speed, 70, 170, 140, 200);
+    speed = map(speed, 70, 170, 150, 170);
 
     // check if need to change light
     if(light_mode){
@@ -53,6 +53,9 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fo
     // check if need to change mov
     if(mov_mode){
         mov = rand() % 4 +1;
+        if(mov == mov1.mov ){
+          mov = (mov + 1)% 6 +1;
+        }
         mov1.mov = mov;
     }
     else{
@@ -98,9 +101,11 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fo
         case 2:
             sx_dx(&mov2, color,speed);
             sx_dx(&mov1, color,speed);
+            break;
         case 3:
             mov_v(&mov2, color,speed);
             mov_v(&mov1, color,speed);
+            break;
         default:
             rotate(&mov1, color, speed);
             rotate(&mov2, color,speed);

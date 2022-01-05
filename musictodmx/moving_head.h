@@ -10,7 +10,7 @@
 #include "color.h"
 #include <stdlib.h> //usata per random
 
-#define HOLD  5
+#define HOLD  6
 
 #define ROTATE    1
 #define UP_DOWN   2
@@ -32,6 +32,7 @@
 #define V1      9
 #define V2      10
 #define V3      11
+#define V4      12
 
 
 #define RED_VALUE       35
@@ -72,6 +73,6 @@ void up_down(moving_head *head, uint8_t color, uint8_t speed);
 
 void sx_dx(moving_head *head, uint8_t color, uint8_t speed);
 
-void mov_v(moving_head *head, uint8_t color, uint8_t speed){
+void mov_v(moving_head *head, uint8_t color, uint8_t speed);
 
 #endif
