@@ -164,7 +164,6 @@ void taskSendingOutput(void *pvParameters){
     int duration = 0, duration_end = 0;
 
     while(true){
-        xSemaphoreTake(bpm_mtx,portMAX_DELAY);
         
         xFreq = 23 / portTICK_PERIOD_MS;
         
@@ -177,7 +176,6 @@ void taskSendingOutput(void *pvParameters){
         else{
           light_mode = 0;
         }
-        xSemaphoreGive(bpm_mtx);
         if(uxSemaphoreGetCount(mov_mtx) > 0){
           xSemaphoreTake(mov_mtx,portMAX_DELAY);
           //TODO: add call for change mov speed
