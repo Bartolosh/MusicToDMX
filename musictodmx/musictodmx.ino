@@ -45,7 +45,6 @@ uint16_t bpm = 120;
 
 // TODO check if the sample frequency is correct
 void taskInputRecording(void *pvParameters){
-    //Serial.println("readIMU "+ String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
     uint16_t c = 0;
     int filtered;
 
@@ -60,19 +59,17 @@ void taskInputRecording(void *pvParameters){
         startTime = millis();
         while(c < SAMPLES){
             buffer[c] = (double)analogRead(A0);
-            //Serial.println((String)"Read n." + c + ": "+buffer[c] );
             c++;
         }
-        //Serial.println("BUFFER FULL");
         c=0;
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
             xSemaphoreGive(new_data_mtx);
         }
-        //Serial.println("readIMU end task " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
         
-        finishTime = (millis() - startTime)/1000;
+        //finishTime = (millis() - startTime)/1000;
         
         //Serial.println((String) "Task RecordingInput elapsed: "+ finishTime + " ms");
+        
         xSemaphoreGive(buffer_mtx);
         vTaskDelayUntil(&xLastWakeTime, xFreq);    
         
@@ -89,7 +86,6 @@ void taskInputProcessing(void *pvParameters){
 
   max_peak_fil = 0;
   min_peak_fil = 1023;
-  uint8_t alterna = 0;
 
   while(true){
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
@@ -128,7 +124,6 @@ void taskInputProcessing(void *pvParameters){
     }
 
     int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
-    //Serial.println((String)"PEAK = " + lvl);
     
     if(lvl > THRESHOLD){
       xSemaphoreGive(color_mtx);
@@ -145,29 +140,14 @@ void taskInputProcessing(void *pvParameters){
     if(peak_to_peak > (lvl_sound - THRESHOLD_MOV)){
       lvl_sound = peak_to_peak;
       peak_to_peak = 0;
-      //Serial.println("Change mov");
       xSemaphoreGive(mov_mtx);
     }
-    //Serial.println((String)"sound: " + lvl_sound + " new = " + peak_to_peak);
-    
-    //finishTime = (millis() - startTime)/1000;
-    finishTime = millis();
+    //finishTime = millis();
    
-    float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
-    Serial.println((String)"FREQ  " + freq);
+    //float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
+    //Serial.println((String)"FREQ  " + freq);
     //Serial.println((String) "Task ProcessingInput elapsed: "+ finishTime + " ms");
-    
-    
-    //Serial.println((String)"Peak value: " + peak_fil);
-
-    /*Serial.println("Spectrum values:");
-    Serial.print("[");
-    for(int i = 0 ; i < SAMPLES; i++){
-        Serial.print(buffer[i]);
-        Serial.println(",");
-    }
-    Serial.println("]");*/
-    
+        
   }
 }
 // TODO check if the refresh frequency is correct, if send packet with 512 ch--> 44Hz, 23ms to send a packet
@@ -213,7 +193,6 @@ void taskSendingOutput(void *pvParameters){
             duration_end = millis();
           }
           fog_state = START;
-          Serial.println((duration - duration_end));
           if((duration - duration_end) >= 1500){
             duration = 0; 
             duration_end = 0;
@@ -235,22 +214,14 @@ void taskFog(void *pvParameters) {
     /* Block for DURATION. */
   TickType_t xLastWakeTimeFog;
   TickType_t xFreqFog = FOG_DURATION_TIME / portTICK_PERIOD_MS;
-  unsigned long startTime = 0;
-  unsigned long finishTime = 0;
-
   xLastWakeTimeFog = xTaskGetTickCount();
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
-    startTime = micros();
     
-    Serial.println("[Fog button pressed !]");
     vTaskDelayUntil(&xLastWakeTimeFog, xFreqFog);
     if(uxSemaphoreGetCount(fog_mtx) == 1){
       xSemaphoreTake(fog_mtx, portMAX_DELAY);
     }
-    finishTime = (micros() - startTime)/1000;
-    Serial.println((String) "FOG Freq = " + + " Fog time elapsed = "+ finishTime);
-
   }
 }
 
@@ -262,11 +233,11 @@ void taskFire(void *pvParameters) {
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
     
-    Serial.println("[Fire button pressed !]");
+    //Serial.println("[Fire button pressed !]");
     fireStart();
     vTaskDelayUntil(&xLastWakeTimeFire, xFreqFire); //maybe it isn't useful but task fog is dangerous
     fireStop();
-    
+    Serial.println("FIRE TASK =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("fireStart"))));
   }
 }
 
@@ -275,8 +246,7 @@ void taskFire(void *pvParameters) {
 void taskValuate(TimerHandle_t xTimer){
 
 
-    //Serial.print("inputRec " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputRec"))));
-
+    //
 
     // Serial.print("inputProc " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputProc"))));
 
@@ -299,7 +269,6 @@ void taskValuate(TimerHandle_t xTimer){
     maxTime = max(finishTime - startTime, maxTime);
     float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
     Serial.println((String)"MaxTime: " + maxTime + " ms");
-    Serial.println((String)"Freq: " + freq +" peak: "+ peak);
     
     Serial.print("    ");
     Serial.println((String)"Time elapsed" + ((finishTime - startTime)/1000000)+" s" );
@@ -328,16 +297,16 @@ void setup(){
     xSemaphoreGive(bpm_mtx);
     xSemaphoreGive(fog_mtx);
 
-    xTaskCreate(taskInputRecording, "inputRec", 200/*160*/, NULL, 1, NULL); 
+    xTaskCreate(taskInputRecording, "inputRec", 95, NULL, 1, NULL); 
     //this task must have higher priority than inputRec bc otherwise it doesn't run
-    xTaskCreate(taskInputProcessing, "inputProc", 16000, NULL,1 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc", 70, NULL,1 , NULL);
     //ELABORATION TASK 
-    xTaskCreate(taskSendingOutput, "outputSend", 200, NULL, 3, NULL); 
+    xTaskCreate(taskSendingOutput, "outputSend", 68, NULL, 3, NULL); 
     //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, (void*)3, taskValuate);
     //xTimerStart(xTimer, 0);   
     
-    xTaskCreate(taskFog, "fogStart", 80, NULL, 4, &taskFogHandle);
-    xTaskCreate(taskFire, "fireStart", 80, NULL, 4, &taskFireHandle);
+    xTaskCreate(taskFog, "fogStart", 62, NULL, 4, &taskFogHandle);
+    xTaskCreate(taskFire, "fireStart", 62, NULL, 4, &taskFireHandle);
     
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");

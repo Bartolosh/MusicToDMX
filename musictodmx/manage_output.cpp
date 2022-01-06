@@ -68,7 +68,6 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fo
 
     if(fog_state ==1 ){
           DMX.write(57,255);
-          Serial.println("START FOG");
     }
     else{
       
