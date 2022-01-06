@@ -54,7 +54,7 @@ void change_color(eurolite_par par,uint8_t color){
             break;
     }
 
-    DMX.write(par.ch_dimmer, 50);
+    DMX.write(par.ch_dimmer, 100);
 }
 void strobe_par(eurolite_par par, uint8_t speed, uint8_t color){
     change_color(par, color);

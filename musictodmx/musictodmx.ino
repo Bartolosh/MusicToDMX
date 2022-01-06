@@ -22,6 +22,7 @@ SemaphoreHandle_t new_data_mtx;
 SemaphoreHandle_t bpm_mtx;
 SemaphoreHandle_t color_mtx;
 SemaphoreHandle_t mov_mtx;
+SemaphoreHandle_t fog_mtx;
 
 LowCutFilter *cutfilter;
 LowPassFilter *filter;
@@ -32,6 +33,7 @@ int n = 0, counter_peaks_buffer = 0;
 
 unsigned long startTime = 0;
 unsigned long finishTime = 0;
+
 
 HardwareSerial Serial4(D0, D1);
 RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
@@ -126,7 +128,7 @@ void taskInputProcessing(void *pvParameters){
     }
 
     int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
-    Serial.println((String)"PEAK = " + lvl);
+    //Serial.println((String)"PEAK = " + lvl);
     
     if(lvl > THRESHOLD){
       xSemaphoreGive(color_mtx);
@@ -146,7 +148,7 @@ void taskInputProcessing(void *pvParameters){
       //Serial.println("Change mov");
       xSemaphoreGive(mov_mtx);
     }
-    Serial.println((String)"sound: " + lvl_sound + " new = " + peak_to_peak);
+    //Serial.println((String)"sound: " + lvl_sound + " new = " + peak_to_peak);
     
     //finishTime = (millis() - startTime)/1000;
     finishTime = millis();
@@ -178,10 +180,13 @@ void taskSendingOutput(void *pvParameters){
 
     xLastWakeTime = xTaskGetTickCount();
     uint8_t light_mode, mov_mode;
+    uint8_t fog_state = STOP;
+    int duration = 0, duration_end = 0;
+
     while(true){
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
         
-        xFreq = MS_IN_MIN / (1000*portTICK_PERIOD_MS);
+        xFreq = 23 / portTICK_PERIOD_MS;
         
         if(uxSemaphoreGetCount(color_mtx) > 0){
           
@@ -201,8 +206,23 @@ void taskSendingOutput(void *pvParameters){
         else{
           mov_mode = 0;
         }
+
+        if(uxSemaphoreGetCount(fog_mtx) == 0){
+          duration = millis();
+          if(duration_end == 0){
+            duration_end = millis();
+          }
+          fog_state = START;
+          Serial.println((duration - duration_end));
+          if((duration - duration_end) >= 1500){
+            duration = 0; 
+            duration_end = 0;
+            fog_state = STOP;
+            xSemaphoreGive(fog_mtx);   
+          }
+        }
         
-        send_output(bpm, light_mode, mov_mode);
+        send_output(bpm, light_mode, mov_mode, fog_state);
 
         //Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");
         
@@ -214,7 +234,7 @@ void taskSendingOutput(void *pvParameters){
 void taskFog(void *pvParameters) {
     /* Block for DURATION. */
   TickType_t xLastWakeTimeFog;
-  const TickType_t xFreqFog = FOG_DURATION_TIME / portTICK_PERIOD_MS;
+  TickType_t xFreqFog = FOG_DURATION_TIME / portTICK_PERIOD_MS;
   unsigned long startTime = 0;
   unsigned long finishTime = 0;
 
@@ -222,12 +242,14 @@ void taskFog(void *pvParameters) {
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
     startTime = micros();
-    fogStart();
+    
     Serial.println("[Fog button pressed !]");
     vTaskDelayUntil(&xLastWakeTimeFog, xFreqFog);
+    if(uxSemaphoreGetCount(fog_mtx) == 1){
+      xSemaphoreTake(fog_mtx, portMAX_DELAY);
+    }
     finishTime = (micros() - startTime)/1000;
     Serial.println((String) "FOG Freq = " + + " Fog time elapsed = "+ finishTime);
-    fogStop();
 
   }
 }
@@ -298,11 +320,13 @@ void setup(){
     buffer_mtx = xSemaphoreCreateMutex();                               /* semaphores for buffer*/
     new_data_mtx = xSemaphoreCreateBinary();
     bpm_mtx = xSemaphoreCreateMutex();
+    fog_mtx = xSemaphoreCreateBinary();
     mov_mtx = xSemaphoreCreateBinary();
     color_mtx = xSemaphoreCreateBinary();
 
     xSemaphoreGive(buffer_mtx);
-    xSemaphoreGive(bpm_mtx); 
+    xSemaphoreGive(bpm_mtx);
+    xSemaphoreGive(fog_mtx);
 
     xTaskCreate(taskInputRecording, "inputRec", 200/*160*/, NULL, 1, NULL); 
     //this task must have higher priority than inputRec bc otherwise it doesn't run
