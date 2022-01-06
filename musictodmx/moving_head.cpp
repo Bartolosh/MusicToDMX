@@ -39,7 +39,7 @@ void set_color(moving_head head,uint8_t color){
     DMX.write(head.ch_dimmer, 100);
 }
 
-void rotate(moving_head *head, uint8_t speed, uint8_t color){
+void rotate(moving_head *head, uint8_t color, uint8_t speed){
     set_color(*head, color);
     //DmxSimple.write(head->ch_speed, speed);
     DMX.write(head->ch_speed, speed);
@@ -114,7 +114,7 @@ void strobe_head(moving_head head, uint8_t speed, uint8_t color){
 void up_down(moving_head *head, uint8_t color, uint8_t speed){
     set_color(*head, color);
 
-    DMX.write(head->ch_speed, speed);
+    DMX.write(head->ch_speed, (speed));
 
     switch(head->state){
         case UP1:
