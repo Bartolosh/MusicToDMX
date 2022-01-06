@@ -10,7 +10,7 @@ sampling frequency: 4000 Hz
 
 fixed point precision: 16 bits
 
-* 0 Hz - 200 Hz
+* 50 Hz - 200 Hz
   gain = 1
   desired ripple = 5 dB
   actual ripple = n/a
