@@ -10,7 +10,7 @@
 #include "color.h"
 #include <stdlib.h> //usata per random
 
-#define HOLD  6
+#define HOLD  30
 
 #define ROTATE    1
 #define UP_DOWN   2

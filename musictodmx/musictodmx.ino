@@ -113,7 +113,7 @@ void taskInputProcessing(void *pvParameters){
 
     /* Each 1000 iterations,reset the minimum and maximum detected values.
      This helps if the sound level changes and we want our code to adapt to it.*/
-    if((n%400) == 0){
+    if((n%300) == 0){
       lvl_sound = 0;
     }
 
@@ -126,6 +126,7 @@ void taskInputProcessing(void *pvParameters){
     int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
     
     if(lvl > THRESHOLD){
+      Serial.println(lvl);
       xSemaphoreGive(color_mtx);
       thisChange = millis();
       peak_to_peak = thisChange-lastChange;

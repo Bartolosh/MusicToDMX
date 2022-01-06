@@ -41,7 +41,6 @@ void set_color(moving_head head,uint8_t color){
 
 void rotate(moving_head *head, uint8_t color, uint8_t speed){
     set_color(*head, color);
-    //DmxSimple.write(head->ch_speed, speed);
     DMX.write(head->ch_speed, speed);
     
     //TODO: controllare valori per posizioni
