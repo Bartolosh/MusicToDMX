@@ -11,11 +11,11 @@
 #include "LowPassFilter.h"
 #include "LowCutFilter.h"
 
-#define SAMPLES 1024
+#define SAMPLES 2048
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
 #define THRESHOLD_MOV 400    //TODO: need to be checked if it is good enough
-#define THRESHOLD 350 //TUNE IT define a peak
+#define THRESHOLD 500 //TUNE IT define a peak
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
@@ -50,7 +50,7 @@ void taskInputRecording(void *pvParameters){
 
     TickType_t xLastWakeTime;
     // xFreq is set to 1/4  of seconds but need to be set after timer analysis of processing and output
-    TickType_t xFreq = 200 / (portTICK_PERIOD_MS);
+    TickType_t xFreq = 300 / (portTICK_PERIOD_MS);
 
 
     xLastWakeTime = xTaskGetTickCount();
@@ -84,7 +84,7 @@ void taskInputProcessing(void *pvParameters){
   unsigned long lastChange = 0;
   unsigned long thisChange = 0;
   int cutted,filtered, peak_fil, max_peak_fil, min_peak_fil;
-
+  int last_peak = 0;
   long lvl_sound = 0, peak_to_peak = 0;
 
   max_peak_fil = 0;
@@ -130,16 +130,16 @@ void taskInputProcessing(void *pvParameters){
     int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
     
     if(lvl > THRESHOLD){
-      xSemaphoreGive(color_mtx);
-      thisChange = millis();
-      peak_to_peak = thisChange-lastChange;
-      lastChange = thisChange;
-      xSemaphoreTake(bpm_mtx,portMAX_DELAY);
-      
-      bpm = 60000/peak_to_peak;
-
-      xSemaphoreGive(bpm_mtx);
-      
+        Serial.println(lvl);
+        xSemaphoreGive(color_mtx);
+        thisChange = millis();
+        peak_to_peak = thisChange-lastChange;
+        lastChange = thisChange;
+        xSemaphoreTake(bpm_mtx,portMAX_DELAY);
+        
+        bpm = 60000/peak_to_peak;
+  
+        xSemaphoreGive(bpm_mtx);
     }
     if(peak_to_peak > (lvl_sound - THRESHOLD_MOV)){
       lvl_sound = peak_to_peak;
