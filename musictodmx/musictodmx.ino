@@ -11,11 +11,11 @@
 #include "LowPassFilter.h"
 #include "LowCutFilter.h"
 
-#define SAMPLES 2048
+#define SAMPLES 512
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
 #define THRESHOLD_MOV 400    //TODO: need to be checked if it is good enough
-#define THRESHOLD 400 //TUNE IT define a peak
+#define THRESHOLD 350 //TUNE IT define a peak
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
@@ -49,14 +49,14 @@ void taskInputRecording(void *pvParameters){
     int filtered;
 
     TickType_t xLastWakeTime;
-    // xFreq is set to 1/4anzi  of seconds but need to be set after timer analysis of processing and output
-    TickType_t xFreq = 250 / (portTICK_PERIOD_MS);
+    // xFreq is set to 1/4  of seconds but need to be set after timer analysis of processing and output
+    TickType_t xFreq = 125 / (portTICK_PERIOD_MS);
 
 
     xLastWakeTime = xTaskGetTickCount();
     while(true){
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-        startTime = millis();
+        //startTime = millis();
         while(c < SAMPLES){
             buffer[c] = (double)analogRead(A0);
             c++;
@@ -66,18 +66,21 @@ void taskInputRecording(void *pvParameters){
             xSemaphoreGive(new_data_mtx);
         }
         
-        //finishTime = (millis() - startTime)/1000;
-        
-        //Serial.println((String) "Task RecordingInput elapsed: "+ finishTime + " ms");
         
         xSemaphoreGive(buffer_mtx);
+
+        //finishTime = (millis() - startTime);
+        
+        //Serial.println((String) "Task Rec elapsed: "+ finishTime + " ms");
+           
         vTaskDelayUntil(&xLastWakeTime, xFreq);    
         
     }
 }
 
 void taskInputProcessing(void *pvParameters){
-  
+
+
   unsigned long lastChange = 0;
   unsigned long thisChange = 0;
   int cutted,filtered, peak_fil, max_peak_fil, min_peak_fil;
@@ -88,12 +91,13 @@ void taskInputProcessing(void *pvParameters){
   min_peak_fil = 1023;
 
   while(true){
+    startTime = millis();
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
-
+    
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     peak_fil = 0;
 
-    
+      
 
     for(int i = 0; i < SAMPLES; i++){
       // cutting low freq (0 Hz -20 Hz)
@@ -111,13 +115,13 @@ void taskInputProcessing(void *pvParameters){
 
     n++;
 
-    /* Each 1000 iterations,reset the minimum and maximum detected values.
+    /* E         ach 1000 iterations,reset the minimum and maximum detected values.
      This helps if the sound level changes and we want our code to adapt to it.*/
     if((n%300) == 0){
       lvl_sound = 0;
     }
 
-    if((n%700) == 0){
+    if((n%800) == 0){
       
       max_peak_fil = 0;
       min_peak_fil = 1023;
@@ -126,7 +130,6 @@ void taskInputProcessing(void *pvParameters){
     int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
     
     if(lvl > THRESHOLD){
-      Serial.println(lvl);
       xSemaphoreGive(color_mtx);
       thisChange = millis();
       peak_to_peak = thisChange-lastChange;
@@ -142,12 +145,17 @@ void taskInputProcessing(void *pvParameters){
       lvl_sound = peak_to_peak;
       peak_to_peak = 0;
       xSemaphoreGive(mov_mtx);
-    }
-    //finishTime = millis();
+    }   
+
+    finishTime = millis();
+    float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
+    Serial.println((String)"FREQ  " + freq);
+      
+    //finishTime = (millis() - startTime);
+
+    //Serial.println((String) "Task Rec + Proc elapsed: "+ finishTime + " ms");
    
-    //float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
-    //Serial.println((String)"FREQ  " + freq);
-    //Serial.println((String) "Task ProcessingInput elapsed: "+ finishTime + " ms");
+    //Serial.println((String) "Task ProcessingInput elapsed: "+ (finish_time- start_time) + " ms");
         
   }
 }
@@ -165,7 +173,7 @@ void taskSendingOutput(void *pvParameters){
     int duration = 0, duration_end = 0;
 
     while(true){
-        
+        //startTime = millis();
         xFreq = 23 / portTICK_PERIOD_MS;
         
         if(uxSemaphoreGetCount(color_mtx) > 0){
@@ -201,7 +209,8 @@ void taskSendingOutput(void *pvParameters){
         }
         
         send_output(bpm, light_mode, mov_mode, fog_state);
-
+        //finishTime = millis() - startTime;
+        
         //Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");
         
         vTaskDelayUntil(&xLastWakeTime, xFreq);
@@ -221,7 +230,7 @@ void taskFog(void *pvParameters) {
     if(uxSemaphoreGetCount(fog_mtx) == 1){
       xSemaphoreTake(fog_mtx, portMAX_DELAY);
     }
-  }
+   }
 }
 
 
@@ -236,7 +245,8 @@ void taskFire(void *pvParameters) {
     fireStart();
     vTaskDelayUntil(&xLastWakeTimeFire, xFreqFire); //maybe it isn't useful but task fog is dangerous
     fireStop();
-    Serial.println("FIRE TASK =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("fireStart"))));
+    
+    //Serial.println("FIRE TASK =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("fireStart"))));
   }
 }
 
@@ -296,11 +306,11 @@ void setup(){
     xSemaphoreGive(bpm_mtx);
     xSemaphoreGive(fog_mtx);
 
-    xTaskCreate(taskInputRecording, "inputRec", 95, NULL, 1, NULL); 
+    xTaskCreate(taskInputRecording, "inputRec", 200/*95*/, NULL, 1, NULL); 
     //this task must have higher priority than inputRec bc otherwise it doesn't run
-    xTaskCreate(taskInputProcessing, "inputProc", 70, NULL,1 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc", 90/*70*/, NULL,1 , NULL);
     //ELABORATION TASK 
-    xTaskCreate(taskSendingOutput, "outputSend", 68, NULL, 3, NULL); 
+    xTaskCreate(taskSendingOutput, "outputSend", 72/*68*/, NULL, 3, NULL); 
     //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, (void*)3, taskValuate);
     //xTimerStart(xTimer, 0);   
     
