@@ -11,7 +11,7 @@
 #include "LowPassFilter.h"
 #include "LowCutFilter.h"
 
-#define SAMPLES 512
+#define SAMPLES 1024
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
 #define THRESHOLD_MOV 400    //TODO: need to be checked if it is good enough
@@ -50,7 +50,7 @@ void taskInputRecording(void *pvParameters){
 
     TickType_t xLastWakeTime;
     // xFreq is set to 1/4  of seconds but need to be set after timer analysis of processing and output
-    TickType_t xFreq = 125 / (portTICK_PERIOD_MS);
+    TickType_t xFreq = 200 / (portTICK_PERIOD_MS);
 
 
     xLastWakeTime = xTaskGetTickCount();
