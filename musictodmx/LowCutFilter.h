@@ -10,12 +10,12 @@ sampling frequency: 5100 Hz
 
 fixed point precision: 16 bits
 
-* 0 Hz - 50 Hz
+* 0 Hz - 80 Hz
   gain = 0
   desired attenuation = -40 dB
   actual attenuation = n/a
 
-* 60 Hz - 2550 Hz
+* 120 Hz - 2050 Hz
   gain = 1
   desired ripple = 5 dB
   actual ripple = n/a

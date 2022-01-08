@@ -1,3 +1,4 @@
+
 #include <STM32FreeRTOS.h>
 #include <timers.h>
 #include <semphr.h>
@@ -11,11 +12,11 @@
 #include "LowPassFilter.h"
 #include "LowCutFilter.h"
 
-#define SAMPLES 2048
+#define SAMPLES 512
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
 #define THRESHOLD_MOV 400    //TODO: need to be checked if it is good enough
-#define THRESHOLD 500 //TUNE IT define a peak
+#define THRESHOLD 450 //TUNE IT define a peak
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
@@ -50,7 +51,7 @@ void taskInputRecording(void *pvParameters){
 
     TickType_t xLastWakeTime;
     // xFreq is set to 1/4  of seconds but need to be set after timer analysis of processing and output
-    TickType_t xFreq = 300 / (portTICK_PERIOD_MS);
+    TickType_t xFreq = 125 / (portTICK_PERIOD_MS);
 
 
     xLastWakeTime = xTaskGetTickCount();
@@ -103,9 +104,12 @@ void taskInputProcessing(void *pvParameters){
       // cutting low freq (0 Hz -20 Hz)
       LowCutFilter_put(cutfilter,buffer[i]);
       cutted = LowCutFilter_get(cutfilter);
+      
       // filtering signal
       LowPassFilter_put(filter,cutted);
       filtered = LowPassFilter_get(filter);
+      filtered = abs(filtered);
+      //Serial.println((String)"    filtered = "+ filtered);
       peak_fil = max(peak_fil, filtered);
       
     }
@@ -121,7 +125,7 @@ void taskInputProcessing(void *pvParameters){
       lvl_sound = 0;
     }
 
-    if((n%800) == 0){
+    if((n%500) == 0){
       
       max_peak_fil = 0;
       min_peak_fil = 1023;
@@ -130,7 +134,7 @@ void taskInputProcessing(void *pvParameters){
     int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
     
     if(lvl > THRESHOLD){
-        Serial.println(lvl);
+      if((millis()-lastChange)>300){
         xSemaphoreGive(color_mtx);
         thisChange = millis();
         peak_to_peak = thisChange-lastChange;
@@ -140,6 +144,7 @@ void taskInputProcessing(void *pvParameters){
         bpm = 60000/peak_to_peak;
   
         xSemaphoreGive(bpm_mtx);
+      }
     }
     if(peak_to_peak > (lvl_sound - THRESHOLD_MOV)){
       lvl_sound = peak_to_peak;
@@ -147,9 +152,9 @@ void taskInputProcessing(void *pvParameters){
       xSemaphoreGive(mov_mtx);
     }   
 
-    finishTime = millis();
-    float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
-    Serial.println((String)"FREQ  " + freq);
+    //finishTime = millis();
+    //float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
+    //Serial.println((String)"FREQ  " + freq);
       
     //finishTime = (millis() - startTime);
 
