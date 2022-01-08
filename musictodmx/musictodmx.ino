@@ -109,7 +109,7 @@ void taskInputProcessing(void *pvParameters){
       LowPassFilter_put(filter,cutted);
       filtered = LowPassFilter_get(filter);
       filtered = abs(filtered);
-      //Serial.println((String)"    filtered = "+ filtered);
+      
       peak_fil = max(peak_fil, filtered);
       
     }
@@ -140,7 +140,7 @@ void taskInputProcessing(void *pvParameters){
         peak_to_peak = thisChange-lastChange;
         lastChange = thisChange;
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
-        
+        Serial.println(bpm);
         bpm = 60000/peak_to_peak;
   
         xSemaphoreGive(bpm_mtx);

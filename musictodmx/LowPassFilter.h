@@ -22,7 +22,7 @@ fixed point precision: 16 bits
 
 */
 
-#define LOWPASSFILTER_TAP_NUM 43
+#define LOWPASSFILTER_TAP_NUM 47
 
 typedef struct {
   int history[LOWPASSFILTER_TAP_NUM];
