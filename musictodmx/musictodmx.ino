@@ -1,4 +1,8 @@
 
+
+
+
+  
 #include <STM32FreeRTOS.h>
 #include <timers.h>
 #include <semphr.h>
@@ -68,7 +72,7 @@ void taskInputRecording(void *pvParameters){
             xSemaphoreGive(new_data_mtx);
         }
         
-        
+         
         xSemaphoreGive(buffer_mtx);
 
         //finishTime = (millis() - startTime);
@@ -278,7 +282,7 @@ void taskValuate(TimerHandle_t xTimer){
     // Insert code to test here
     for(int k=0; k<SAMPLES; k++){
       buffer[k] = (double) analogRead(A0);
-      //LowPassFilter_put(filter, buffer[k]);
+      //LowPassFilter_put(filter, buffer[k]);xSemaphoreCreateBinary()
       //filtered = LowPassFilter_get(filter);
 
       //peak = max(peak, filtered);
@@ -310,10 +314,12 @@ void setup(){
     fog_mtx = xSemaphoreCreateBinary();
     mov_mtx = xSemaphoreCreateBinary();
     color_mtx = xSemaphoreCreateBinary();
+    fire_mtx = xSemaphoreCreateBinary(); 
 
     xSemaphoreGive(buffer_mtx);
     xSemaphoreGive(bpm_mtx);
     xSemaphoreGive(fog_mtx);
+    xSemaphoreGive(fire_mtx);
 
     xTaskCreate(taskInputRecording, "inputRec", 200/*95*/, NULL, 1, NULL); 
     //this task must have higher priority than inputRec bc otherwise it doesn't run
