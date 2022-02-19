@@ -30,7 +30,7 @@ void init_fixture(void){
 
 // mode = 1 --> random 
 // mode = 0 --> use current
-void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fog_state){
+void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fog_state, uint8_t fire_start){
     uint8_t color;
     int mov;
 
@@ -65,7 +65,15 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fo
 
     DMX.beginTransmission();
 
-    if(fog_state ==1 ){
+    if(fog_state == 1){
+          DMX.write(57,255);
+    }
+    else{
+      
+      DMX.write(57,0);
+    }
+
+    if(fire_start == 1){
           DMX.write(57,255);
     }
     else{

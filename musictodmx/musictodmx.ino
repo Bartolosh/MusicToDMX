@@ -4,7 +4,7 @@
 #include <semphr.h>
 #include <stdlib.h>
 #include <string.h>
-#include "arduinoFFT.h"
+
 #include "manage_output.h"
 #include "list_custom.h"
 #include "fog.h"
@@ -24,6 +24,7 @@ SemaphoreHandle_t bpm_mtx;
 SemaphoreHandle_t color_mtx;
 SemaphoreHandle_t mov_mtx;
 SemaphoreHandle_t fog_mtx;
+SemaphoreHandle_t fire_mtx;
 
 LowCutFilter *cutfilter;
 LowPassFilter *filter;
@@ -175,6 +176,7 @@ void taskSendingOutput(void *pvParameters){
     xLastWakeTime = xTaskGetTickCount();
     uint8_t light_mode, mov_mode;
     uint8_t fog_state = STOP;
+    uint8_t fire_state = STOP;
     int duration = 0, duration_end = 0;
 
     while(true){
@@ -212,8 +214,14 @@ void taskSendingOutput(void *pvParameters){
             xSemaphoreGive(fog_mtx);   
           }
         }
-        
-        send_output(bpm, light_mode, mov_mode, fog_state);
+        if(uxSemaphoreGetCount(fire_mtx) == 0){
+          xSemaphoreGive(fog_mtx);
+          fire_state=1;
+        }
+        else{
+          fire_state=0;
+        }
+        send_output(bpm, light_mode, mov_mode, fog_state, fire_state);
         //finishTime = millis() - startTime;
         
         //Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");
@@ -240,16 +248,12 @@ void taskFog(void *pvParameters) {
 
 
 void taskFire(void *pvParameters) {
-  TickType_t xLastWakeTimeFire;
-  const TickType_t xFreqFire = 500 / portTICK_PERIOD_MS;
-  xLastWakeTimeFire = xTaskGetTickCount();
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
-    
-    //Serial.println("[Fire button pressed !]");
-    fireStart();
-    vTaskDelayUntil(&xLastWakeTimeFire, xFreqFire); //maybe it isn't useful but task fog is dangerous
-    fireStop();
+
+    if(uxSemaphoreGetCount(fire_mtx) == 1){
+      xSemaphoreTake(fire_mtx, portMAX_DELAY);
+    }
     
     //Serial.println("FIRE TASK =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("fireStart"))));
   }
