@@ -16,11 +16,11 @@
 #include "LowPassFilter.h"
 #include "LowCutFilter.h"
 
-#define SAMPLES 32
+#define SAMPLES 40
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
 #define THRESHOLD_MOV 400    //TODO: need to be checked if it is good enough
-#define THRESHOLD 450 //TUNE IT define a peak
+#define THRESHOLD 400 //TUNE IT define a peak
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
@@ -351,7 +351,7 @@ void setup(){
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
 }
-
+}
 void loop(){
     //ERROR IF WE ARE HERE
     /*
