@@ -16,7 +16,7 @@
 #include "LowPassFilter.h"
 #include "LowCutFilter.h"
 
-#define SAMPLES 512
+#define SAMPLES 32
 #define FRAME_LENGTH 100
 #define MS_IN_MIN 60000
 #define THRESHOLD_MOV 400    //TODO: need to be checked if it is good enough
@@ -39,6 +39,8 @@ int n = 0, counter_peaks_buffer = 0;
 
 unsigned long startTime = 0;
 unsigned long finishTime = 0;
+unsigned long startTime2 = 0;
+unsigned long finishTime2 = 0;
 
 
 HardwareSerial Serial4(D0, D1);
@@ -55,29 +57,41 @@ void taskInputRecording(void *pvParameters){
     int filtered;
 
     TickType_t xLastWakeTime;
+    TickType_t xNextRead;
     // xFreq is set to 1/4  of seconds but need to be set after timer analysis of processing and output
     TickType_t xFreq = 125 / (portTICK_PERIOD_MS);
-
+    TickType_t xFreqRec = 1.25 / (portTICK_PERIOD_MS);
 
     xLastWakeTime = xTaskGetTickCount();
+    xNextRead = xTaskGetTickCount();
+   
     while(true){
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
         //startTime = millis();
+        startTime2 = millis();
+        
         while(c < SAMPLES){
+            startTime = micros();
             buffer[c] = (double)analogRead(A0);
             c++;
+            finishTime = (micros() - startTime);
+            Serial.print("Letto un dato = ");
+            Serial.println(finishTime);
+            vTaskDelayUntil(&xNextRead, xFreqRec);
         }
+        finishTime2 = (millis() - startTime2);
+        Serial.print("BUFFER PIENO = ");
+        Serial.println(finishTime2);
+        
         c=0;
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
             xSemaphoreGive(new_data_mtx);
         }
-        
+
          
         xSemaphoreGive(buffer_mtx);
 
-        //finishTime = (millis() - startTime);
         
-        //Serial.println((String) "Task Rec elapsed: "+ finishTime + " ms");
            
         vTaskDelayUntil(&xLastWakeTime, xFreq);    
         
@@ -137,6 +151,7 @@ void taskInputProcessing(void *pvParameters){
     }
 
     int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
+    Serial.println(lvl);
     
     if(lvl > THRESHOLD){
       if((millis()-lastChange)>300){
@@ -145,7 +160,7 @@ void taskInputProcessing(void *pvParameters){
         peak_to_peak = thisChange-lastChange;
         lastChange = thisChange;
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
-        Serial.println(bpm);
+        //Serial.println(bpm);
         bpm = 60000/peak_to_peak;
   
         xSemaphoreGive(bpm_mtx);
@@ -297,7 +312,8 @@ void taskValuate(TimerHandle_t xTimer){
 }
 
 void setup(){
-    
+   
+ while (1) { 
     Serial.begin(115200);
     fireSelector();
     fogSelector();
