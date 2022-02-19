@@ -74,11 +74,12 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fo
     }
 
     if(fire_start == 1){
-          DMX.write(57,255);
+      DMX.write(2,50);
+      DMX.write(1,255);
     }
     else{
       
-      DMX.write(57,0);
+      DMX.write(1,0);
     }
 
     switch(mov_col){

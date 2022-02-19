@@ -182,6 +182,7 @@ void taskSendingOutput(void *pvParameters){
     uint8_t fog_state = STOP;
     uint8_t fire_state = STOP;
     int duration = 0, duration_end = 0;
+    int count_fire = 0;
 
     while(true){
         //startTime = millis();
@@ -219,10 +220,13 @@ void taskSendingOutput(void *pvParameters){
           }
         }
         if(uxSemaphoreGetCount(fire_mtx) == 0){
-          xSemaphoreGive(fog_mtx);
+          if(count_fire == 3){
+            xSemaphoreGive(fire_mtx);
+          }
           fire_state=1;
         }
         else{
+          count_fire=0;
           fire_state=0;
         }
         send_output(bpm, light_mode, mov_mode, fog_state, fire_state);
