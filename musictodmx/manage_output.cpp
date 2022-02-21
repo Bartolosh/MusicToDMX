@@ -66,19 +66,19 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fo
     DMX.beginTransmission();
 
     if(fog_state == 1){
-          DMX.write(57,255);
+          fogStart();
     }
     else{
       
-      DMX.write(57,0);
+      fogStop();
     }
 
     if(fire_start == 1){
-          DMX.write(57,255);
+      fireStart();
     }
     else{
       
-      DMX.write(57,0);
+      fireStop();
     }
 
     switch(mov_col){

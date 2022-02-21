@@ -21,14 +21,10 @@ void fogSelector() {
 }
 
 void fogStart(){
-    DMX.beginTransmission();
     DMX.write(fog_channel, 255);
-    DMX.endTransmission();
 }
 
 
 void fogStop(){
-    DMX.beginTransmission();
     DMX.write(fog_channel, 0);
-    DMX.endTransmission();
 }

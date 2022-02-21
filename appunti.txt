@@ -10,3 +10,11 @@ TEMPI
     fire = 13ms 
     rec + elabration = 221 (1024 samples)
 
+
+NUOVI TEMPI (periodo 250)
+	rec = 170 sample, esecuzione processore (37620 micro lettura dati + 12 micros)
+	proc = 1ms
+	output = caso peggiore 24 ms 512 canali e 3 per 58
+	fog = 37 micros
+	fire = 35 micros
+

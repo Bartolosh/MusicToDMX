@@ -54,12 +54,12 @@ void taskInputRecording(void *pvParameters){
     const TickType_t xFreqRec = 1 / (portTICK_PERIOD_MS);
 
     xLastWakeTime= xTaskGetTickCount();
-    xNextRead = xTaskGetTickCount();
+    
     while(true){
         
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-        
-        
+        /*startTime = millis();*/
+        xNextRead = xTaskGetTickCount();
         while(c < SAMPLES){
             
             
@@ -74,7 +74,8 @@ void taskInputRecording(void *pvParameters){
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
             xSemaphoreGive(new_data_mtx);
         }
- 
+
+        
         xSemaphoreGive(buffer_mtx);
         
         vTaskDelayUntil(&xLastWakeTime, xFreq);
@@ -99,7 +100,7 @@ void taskInputProcessing(void *pvParameters){
     
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-    startTime = millis();
+    startTime = micros();
     peak_fil = 0;
 
     for(int i = 0; i < SAMPLES; i++){
@@ -121,7 +122,7 @@ void taskInputProcessing(void *pvParameters){
 
     n++;
         
-    /* Each 1000 iterations,reset the minimum and maximum detected values.
+    /* Each 100 iterations,reset the minimum and maximum detected values.
      This helps if the sound level changes and we want our code to adapt to it.*/
     if((n%100) == 0){
       lvl_sound = 0;
@@ -134,7 +135,7 @@ void taskInputProcessing(void *pvParameters){
     }
 
     int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
-    Serial.println(lvl);
+ 
     
     if(lvl > THRESHOLD){
       if((millis()-lastChange)>300){
@@ -154,12 +155,17 @@ void taskInputProcessing(void *pvParameters){
       peak_to_peak = 0;
       xSemaphoreGive(mov_mtx);
     }   
+  
+    /*finishTime = millis();
+    float freqstartTime = millis(); = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
+    Serial.pstartTime = millis();rintln((String)"FREQ  " + freq);*/
+    
       
-    finishTime = (millis() - startTime);
+    //finishTime = (millis() - startTime);
 
-    Serial.println((String) "Task Rec + Proc elapsed: "+ finishTime + " ms");
+    //Serial.println((String) "Task Rec + Proc elapsed: "+ finishTime + " ms");
    
-    //Serial.println((String) "Task ProcessingInput elapsed: "+ (finish_time- start_time) + " ms");
+    /*Serial.println((String) "Task ProcessingInput elapsed: "+ (micros()- startTime) + " ms");*/
         
   }
 }
@@ -175,6 +181,7 @@ void taskSendingOutput(void *pvParameters){
     uint8_t fog_state = STOP;
     uint8_t fire_state = STOP;
     int duration = 0, duration_end = 0;
+    int count_fire = 0;
 
     while(true){
       
@@ -209,36 +216,37 @@ void taskSendingOutput(void *pvParameters){
             fog_state = STOP;
             xSemaphoreGive(fog_mtx);   
           }
-        }
+        }startTime = millis();
         if(uxSemaphoreGetCount(fire_mtx) == 0){
-          xSemaphoreGive(fog_mtx);
-          fire_state=1;
+          if(count_fire == 3){
+            xSemaphoreGive(fire_mtx);
+          }
+          count_fire++;
+          fire_state=START;
         }
         else{
-          fire_state=0;
+          fire_state=STOP;
+          count_fire=0;
         }
         send_output(bpm, light_mode, mov_mode, fog_state, fire_state);
         /*finishTime = millis() - startTime;*/
         
         /*Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");*/
 
-        //vTaskDelayUntil(&xLastWakeTime_out,xFreq_out); 
+        vTaskDelayUntil(&xLastWakeTime_out,xFreq_out); 
     }
 }
 
 /*-------------------- ASYNC TASK ------------------------*/
 void taskFog(void *pvParameters) {
     /* Block for DURATION. */
-  TickType_t xLastWakeTimeFog;
-  TickType_t xFreqFog = FOG_DURATION_TIME / portTICK_PERIOD_MS;
-  xLastWakeTimeFog = xTaskGetTickCount();
   while (true) {
-    vTaskSuspend(NULL);                                                 /* suspends itself */
-    
-    vTaskDelayUntil(&xLastWakeTimeFog, xFreqFog);
+    vTaskSuspend(NULL);                                             
+    startTime = micros();
     if(uxSemaphoreGetCount(fog_mtx) == 1){
       xSemaphoreTake(fog_mtx, portMAX_DELAY);
     }
+    /*Serial.println((String)"tempo esecuzione = " + (micros()-startTime));*/
    }
 }
 
@@ -246,12 +254,12 @@ void taskFog(void *pvParameters) {
 void taskFire(void *pvParameters) {
   while (true) {
     vTaskSuspend(NULL);                                                 /* suspends itself */
-
+    
     if(uxSemaphoreGetCount(fire_mtx) == 1){
       xSemaphoreTake(fire_mtx, portMAX_DELAY);
     }
     
-    //Serial.println("FIRE TASK =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("fireStart"))));
+    /*Serial.println("FIRE TASK =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("fireStart"))));*/
   }
 }
 
