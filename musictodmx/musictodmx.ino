@@ -144,7 +144,6 @@ void taskInputProcessing(void *pvParameters){
         peak_to_peak = thisChange-lastChange;
         lastChange = thisChange;
         xSemaphoreTake(bpm_mtx,portMAX_DELAY);
-        //Serial.println(bpm);
         bpm = 60000/peak_to_peak;
   
         xSemaphoreGive(bpm_mtx);
@@ -155,17 +154,6 @@ void taskInputProcessing(void *pvParameters){
       peak_to_peak = 0;
       xSemaphoreGive(mov_mtx);
     }   
-  
-    /*finishTime = millis();
-    float freqstartTime = millis(); = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
-    Serial.pstartTime = millis();rintln((String)"FREQ  " + freq);*/
-    
-      
-    //finishTime = (millis() - startTime);
-
-    //Serial.println((String) "Task Rec + Proc elapsed: "+ finishTime + " ms");
-   
-    /*Serial.println((String) "Task ProcessingInput elapsed: "+ (micros()- startTime) + " ms");*/
         
   }
 }
@@ -174,7 +162,7 @@ void taskSendingOutput(void *pvParameters){
     
     TickType_t xLastWakeTime_out;
     
-    const TickType_t xFreq_out = 41 / portTICK_PERIOD_MS;;
+    const TickType_t xFreq_out = 41 / portTICK_PERIOD_MS;
 
     xLastWakeTime_out = xTaskGetTickCount();
     uint8_t light_mode, mov_mode;
@@ -229,11 +217,9 @@ void taskSendingOutput(void *pvParameters){
           count_fire=0;
         }
         send_output(bpm, light_mode, mov_mode, fog_state, fire_state);
-        /*finishTime = millis() - startTime;*/
-        
-        /*Serial.println((String) "Task sendOutput time elapse: " + finishTime + " ms");*/
 
-        vTaskDelayUntil(&xLastWakeTime_out,xFreq_out); 
+        vTaskDelayUntil(&xLastWakeTime_out,xFreq_out);
+        
     }
 }
 
@@ -246,7 +232,6 @@ void taskFog(void *pvParameters) {
     if(uxSemaphoreGetCount(fog_mtx) == 1){
       xSemaphoreTake(fog_mtx, portMAX_DELAY);
     }
-    /*Serial.println((String)"tempo esecuzione = " + (micros()-startTime));*/
    }
 }
 
@@ -318,16 +303,16 @@ void setup(){
     xSemaphoreGive(fog_mtx);
     xSemaphoreGive(fire_mtx);
 
-    xTaskCreate(taskInputRecording, "inputRec", 200/*95*/, NULL, 2, NULL); 
+    xTaskCreate(taskInputRecording, "inputRec", 81, NULL, 2, NULL); 
     /* this task must have higher priority than inputRec bc otherwise it doesn't run */
-    xTaskCreate(taskInputProcessing, "inputProc", 90/*70*/, NULL,2 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc", 47, NULL,2 , NULL);
     /* ELABORATION TASK */
-    xTaskCreate(taskSendingOutput, "outputSend", 72/*68*/, NULL, 1, NULL); 
+    xTaskCreate(taskSendingOutput, "outputSend", 63, NULL, 1, NULL); 
     //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, (void*)3, taskValuate);
     //xTimerStart(xTimer, 0);   
     
-    xTaskCreate(taskFog, "fogStart", 62, NULL, 3, &taskFogHandle);
-    xTaskCreate(taskFire, "fireStart", 62, NULL, 3, &taskFireHandle);
+    xTaskCreate(taskFog, "fogStart", 27, NULL, 3, &taskFogHandle);
+    xTaskCreate(taskFire, "fireStart", 27, NULL, 3, &taskFireHandle);
     
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
