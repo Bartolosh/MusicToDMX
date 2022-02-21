@@ -22,7 +22,7 @@ void init_fixture(void){
     init_fog(57);
     
     
-    if (!DMX.begin(58)) {
+    if (!DMX.begin(512)) {
         return ;
     }
 
