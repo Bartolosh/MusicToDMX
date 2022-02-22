@@ -51,7 +51,7 @@ void taskInputRecording(void *pvParameters){
         while(c < SAMPLES){
             
             
-            buffer[c] = (int32_t)analogRead(A0);
+            buffer[c] = (uint16_t)analogRead(A0);
             c++;
             
             vTaskDelayUntil(&xNextRead, xFreqRec);
@@ -75,15 +75,15 @@ void taskInputProcessing(void *pvParameters){
   uint64_t lastChange = 0;
   uint64_t thisChange = 0;
   
-  int32_t cutted,filtered;
-  uint16_t lvl_sound = 0, peak_to_peak = 0;
+  int16_t cutted,filtered;
+  int16_t lvl_sound = 0, peak_to_peak = 0;
 
-  int32_t max_peak_fil = 0;
-  int32_t peak_fil = 0;
-  int32_t min_peak_fil = 1023;
-  int32_t max_peak = 0;
-  int32_t min_peak = 0;
-  int32_t n = 0;
+  int16_t max_peak_fil = 0;
+  int16_t peak_fil = 0;
+  int16_t min_peak_fil = 1023;
+  int16_t max_peak = 0;
+  int16_t min_peak = 0;
+  int16_t n = 0;
 
   LowCutFilter *cutfilter;
   LowPassFilter *filter;

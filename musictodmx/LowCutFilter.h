@@ -28,11 +28,11 @@ fixed point precision: 16 bits
 
 typedef struct {
   int32_t history[LOWCUTFILTER_TAP_NUM];
-  uint32_t last_index;
+  int16_t last_index;
 } LowCutFilter;
 
 void LowCutFilter_init(LowCutFilter* f);
-void LowCutFilter_put(LowCutFilter* f, int32_t input);
-int32_t LowCutFilter_get(LowCutFilter* f);
+void LowCutFilter_put(LowCutFilter* f, int16_t input);
+int16_t LowCutFilter_get(LowCutFilter* f);
 
 #endif

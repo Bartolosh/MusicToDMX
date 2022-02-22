@@ -33,15 +33,15 @@ void LowPassFilter_init(LowPassFilter* f) {
   f->last_index = 0;
 }
 
-void LowPassFilter_put(LowPassFilter* f, int32_t input) {
+void LowPassFilter_put(LowPassFilter* f, int16_t input) {
   f->history[f->last_index++] = input;
   if(f->last_index == LOWPASSFILTER_TAP_NUM)
     f->last_index = 0;
 }
 
-int32_t LowPassFilter_get(LowPassFilter* f) {
+int16_t LowPassFilter_get(LowPassFilter* f) {
   long long acc = 0;
-  int32_t index = f->last_index, i;
+  int16_t index = f->last_index, i;
   for(i = 0; i < LOWPASSFILTER_TAP_NUM; ++i) {
     index = index != 0 ? index-1 : LOWPASSFILTER_TAP_NUM-1;
     acc += (long long)f->history[index] * filter_taps[i];

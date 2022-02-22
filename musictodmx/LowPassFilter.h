@@ -28,11 +28,11 @@ fixed point32_t precision: 16 bits
 
 typedef struct {
   int32_t history[LOWPASSFILTER_TAP_NUM];
-  uint32_t last_index;
+  int16_t last_index;
 } LowPassFilter;
 
 void LowPassFilter_init(LowPassFilter* f);
-void LowPassFilter_put(LowPassFilter* f, int32_t input);
-int32_t LowPassFilter_get(LowPassFilter* f);
+void LowPassFilter_put(LowPassFilter* f, int16_t input);
+int16_t LowPassFilter_get(LowPassFilter* f);
 
 #endif
