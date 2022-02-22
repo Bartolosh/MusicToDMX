@@ -22,23 +22,10 @@ void fireSelector() {
 
 
 void fireStart(){
-    
-    DMX.beginTransmission();
     DMX.write(fire_channel, 255);
-    DMX.endTransmission();
-    DMX.beginTransmission();
-    DMX.write(fire_channel, 255);
-    DMX.endTransmission();
-    DMX.beginTransmission();
-    DMX.write(fire_channel, 255);
-    DMX.endTransmission();
-    
-    
+    DMX.write(fire_channel+1, 50);    
 }
 
 void fireStop(){
-  //maybe it possible mouve this code in start function
-    DMX.beginTransmission();
     DMX.write(fire_channel, 0);
-    DMX.endTransmission();
 }

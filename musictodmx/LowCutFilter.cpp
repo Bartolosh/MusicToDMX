@@ -2,11 +2,11 @@
 
 static int filter_taps[LOWCUTFILTER_TAP_NUM] = {
   
-  -13132,
-  -443,
-  32326,
-  -443,
-  -13132
+ -11497,
+  -8585,
+  38864,
+  -8585,
+  -11497
 };
 
 void LowCutFilter_init(LowCutFilter* f) {

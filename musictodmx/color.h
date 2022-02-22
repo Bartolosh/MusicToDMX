@@ -3,6 +3,7 @@
 */
 
 #ifndef color_h
+#define color_h
 
 #define RED     1
 #define BLUE    2

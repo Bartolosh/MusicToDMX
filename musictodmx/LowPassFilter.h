@@ -10,7 +10,7 @@ sampling frequency: 4000 Hz
 
 fixed point precision: 16 bits
 
-* 100 Hz - 300 Hz
+* 0 Hz - 300 Hz
   gain = 1
   desired ripple = 5 dB
   actual ripple = n/a
@@ -22,7 +22,7 @@ fixed point precision: 16 bits
 
 */
 
-#define LOWPASSFILTER_TAP_NUM 47
+#define LOWPASSFILTER_TAP_NUM 23
 
 typedef struct {
   int history[LOWPASSFILTER_TAP_NUM];

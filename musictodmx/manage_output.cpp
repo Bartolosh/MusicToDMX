@@ -22,22 +22,20 @@ void init_fixture(void){
     init_fog(57);
     
     
-    if (!DMX.begin(58)) {
+    if (!DMX.begin(512)) {
         return ;
     }
 
 }
 
-// mode = 1 --> random 
-// mode = 0 --> use current
 void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fog_state, uint8_t fire_start){
     uint8_t color;
     int mov;
 
+    /* map bpm to speed for the movement */
     speed = map(speed, 70, 170, 150, 90);
-    // check if need to change light
+   
     if(light_mode){
-        //Serial.println("change color");
         color = rand() % 6 +1;
         if(color == par1.current_color ){
           color = (color + 1)% 6 +1;
@@ -45,11 +43,10 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fo
         par1.current_color = color;
     }
     else{
-        //Serial.println("no change");
         color = par1.current_color;
     }
     
-    // check if need to change mov
+    /* check if need to change mov */
     if(mov_mode){
         mov = rand() % 4 +1;
         if(mov == mov1.mov ){
@@ -66,44 +63,24 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fo
     DMX.beginTransmission();
 
     if(fog_state == 1){
-          DMX.write(57,255);
+          fogStart();
     }
     else{
       
-      DMX.write(57,0);
+      fogStop();
     }
 
     if(fire_start == 1){
-      DMX.write(2,50);
-      DMX.write(1,255);
+      fireStart();
     }
     else{
       
-      DMX.write(1,0);
+      fireStop();
     }
 
-    switch(mov_col){
-        case 0:
-            change_color(par1, color);
-            change_color(par2, color);
-            change_color(par3, color);
-            break;
-        case 1:
-            rainbow(par1);
-            rainbow(par2);
-            rainbow(par3);
-            break;
-        case 2:
-            strobe_par(par1, speed,color);
-            strobe_par(par2, speed,color);
-            strobe_par(par3, speed,color);
-            break;
-        default:
-            change_color(par1 ,color);
-            change_color(par2 ,color);
-            change_color(par3 ,color);
-            break;
-    }
+    change_color(par1, color);
+    change_color(par2, color);
+    change_color(par3, color);    
 
     switch(mov){
         case 0:
