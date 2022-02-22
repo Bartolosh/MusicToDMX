@@ -11,17 +11,17 @@
 #include <stdlib.h>
 
 typedef struct{
-    int start_address;
-    int ch_red;
-    int ch_blue;
-    int ch_green;
-    int ch_dimmer;
-    int ch_strobe;
-    int current_color;
-    int current_mov;
+    uint16_t start_address;
+    uint16_t ch_red;
+    uint16_t ch_blue;
+    uint16_t ch_green;
+    uint16_t ch_dimmer;
+    uint16_t ch_strobe;
+    uint8_t current_color;
+    uint8_t current_mov;
 }eurolite_par;
 
-void init_eurolitepar(eurolite_par *par, int start_address);
+void init_eurolitepar(eurolite_par *par, uint16_t start_address);
 
 void change_color(eurolite_par par,uint8_t color);
 

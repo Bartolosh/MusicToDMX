@@ -48,20 +48,20 @@
 #define ROTATION_COLOR  220
 
 typedef struct{
-    int start_address;
-    int ch_color;
-    int ch_dimmer;
-    int ch_strobe;
-    int ch_pan; 
-    int ch_tilt;
-    int ch_speed;
-    int state;
-    int mov;
+    int16_t start_address;
+    int16_t ch_color;
+    int16_t ch_dimmer;
+    int16_t ch_strobe;
+    int16_t ch_pan; 
+    int16_t ch_tilt;
+    int16_t ch_speed;
+    int8_t state;
+    int8_t mov;
     uint8_t hold;
 }moving_head;
 
 
-void init_movinghead(moving_head *head, int start_address);
+void init_movinghead(moving_head *head, uint16_t start_address);
 
 void set_color(moving_head head,uint8_t color);
 

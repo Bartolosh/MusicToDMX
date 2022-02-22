@@ -1,6 +1,6 @@
 #include "moving_head.h"
 
-void init_movinghead(moving_head *head, int start_address){
+void init_movinghead(moving_head *head, int16_t start_address){
     head->start_address = start_address;
     head->ch_dimmer = start_address + 5;
     head->ch_color = start_address + 7;

@@ -30,7 +30,7 @@ void init_fixture(void){
 
 void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fog_state, uint8_t fire_start){
     uint8_t color;
-    int mov;
+    uint8_t mov;
 
     /* map bpm to speed for the movement */
     speed = map(speed, 70, 170, 150, 90);
@@ -57,8 +57,6 @@ void send_output(uint8_t speed, uint8_t light_mode, uint8_t mov_mode, uint8_t fo
     else{
         mov = mov1.mov;
     }
-
-    int mov_col = 0;
 
     DMX.beginTransmission();
 

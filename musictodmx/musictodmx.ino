@@ -27,13 +27,10 @@ SemaphoreHandle_t fire_mtx;
 LowCutFilter *cutfilter;
 LowPassFilter *filter;
 /*int buffer[SAMPLES];*/
-int* buffer;
-int max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
-int min_peak = 0;
-int n = 0, counter_peaks_buffer = 0;
-
-unsigned long startTime = 0;
-unsigned long finishTime = 0;
+int32_t* buffer;
+uint16_t max_peak = 0;
+uint16_t min_peak = 0;
+uint16_t n = 0;
 
 
 HardwareSerial Serial4(D0, D1);
@@ -44,8 +41,7 @@ uint16_t bpm = 120;
 /*-------------------- PERIODIC TASK ------------------------*/
 
 void taskInputRecording(void *pvParameters){
-    uint16_t c = 0;
-    int filtered;
+    uint8_t c = 0;
 
     TickType_t xLastWakeTime;
     TickType_t xNextRead;
@@ -63,7 +59,7 @@ void taskInputRecording(void *pvParameters){
         while(c < SAMPLES){
             
             
-            buffer[c] = (int)analogRead(A0);
+            buffer[c] = (int32_t)analogRead(A0);
             c++;
             
             vTaskDelayUntil(&xNextRead, xFreqRec);
@@ -84,15 +80,15 @@ void taskInputRecording(void *pvParameters){
 
 void taskInputProcessing(void *pvParameters){
 
-  unsigned long lastChange = 0;
-  unsigned long thisChange = 0;
+  uint64_t lastChange = 0;
+  uint64_t thisChange = 0;
         
-  int cutted,filtered, peak_fil, max_peak_fil, min_peak_fil;
-  int last_peak = 0;
-  long lvl_sound = 0, peak_to_peak = 0;
+  uint16_t cutted,filtered;
+  uint16_t lvl_sound = 0, peak_to_peak = 0;
 
-  max_peak_fil = 0;
-  min_peak_fil = 1023;
+  uint16_t max_peak_fil = 0;
+  uint16_t peak_fil = 0;
+  uint16_t min_peak_fil = 1023;
 
   while(true){
     
@@ -100,7 +96,7 @@ void taskInputProcessing(void *pvParameters){
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     peak_fil = 0;
 
-    for(int i = 0; i < SAMPLES; i++){
+    for(uint8_t i = 0; i < SAMPLES; i++){
       
       LowCutFilter_put(cutfilter,buffer[i]);
       cutted = LowCutFilter_get(cutfilter);
@@ -128,9 +124,10 @@ void taskInputProcessing(void *pvParameters){
     if((n%80) == 0){
       max_peak_fil = 0;
       min_peak_fil = 1023;
+      n = 0;
     }
 
-    int lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
+    uint16_t lvl = map(peak_fil, min_peak_fil, max_peak_fil, 0, 1023);
  
     
     if(lvl > THRESHOLD){
@@ -164,8 +161,8 @@ void taskSendingOutput(void *pvParameters){
     uint8_t light_mode, mov_mode;
     uint8_t fog_state = STOP;
     uint8_t fire_state = STOP;
-    int duration = 0, duration_end = 0;
-    int count_fire = 0;
+    uint32_t duration = 0, duration_end = 0;
+    uint8_t count_fire = 0;
 
     while(true){
         
@@ -251,7 +248,7 @@ void setup(){
     LowCutFilter_init(cutfilter);
     LowPassFilter_init(filter);
 
-    buffer = (int*)calloc(SAMPLES, sizeof(int));
+    buffer = (uint32_t*)calloc(SAMPLES, sizeof(uint32_t));
     
     buffer_mtx = xSemaphoreCreateMutex();   /* semaphores for buffer*/
     xSemaphoreGive(buffer_mtx);
