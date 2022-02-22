@@ -167,7 +167,6 @@ void taskSendingOutput(void *pvParameters){
     int count_fire = 0;
 
     while(true){
-      
         
         if(uxSemaphoreGetCount(color_mtx) > 0){
           
@@ -180,7 +179,6 @@ void taskSendingOutput(void *pvParameters){
         }
         if(uxSemaphoreGetCount(mov_mtx) > 0){
           xSemaphoreTake(mov_mtx,portMAX_DELAY);
-          //TODO: add call for change mov speed
           mov_mode = 1;
         }
         else{
@@ -199,7 +197,7 @@ void taskSendingOutput(void *pvParameters){
             fog_state = STOP;
             xSemaphoreGive(fog_mtx);   
           }
-        }startTime = millis();
+        }
         if(uxSemaphoreGetCount(fire_mtx) == 0){
           if(count_fire == 3){
             xSemaphoreGive(fire_mtx);
@@ -239,38 +237,7 @@ void taskFire(void *pvParameters) {
       xSemaphoreTake(fire_mtx, portMAX_DELAY);
     }
     
-    /*Serial.println("FIRE TASK =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("fireStart"))));*/
   }
-}
-
-/*-------------------- VALUATING TASK --------------------*/
-
-void taskValuate(TimerHandle_t xTimer){
-  
-    // Serial.print("inputProc " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("inputProc"))));
-
-
-    unsigned long startTime = 0;
-    unsigned long finishTime = 0;
-    unsigned long maxTime = 0;
-    double filtered, peak;
-
-    startTime = millis();
-    /* Insert code to test here */
-    for(int k=0; k<SAMPLES; k++){
-      buffer[k] = (double) analogRead(A0);    buffer;
-      //LowPassFilter_put(filter, buffer[k]);xSemaphoreCreateBinary()
-      //filtered = LowPassFilter_get(filter);
-
-      //peak = max(peak, filtered);
-    }
-    finishTime = millis();
-    maxTime = max(finishTime - startTime, maxTime);
-    float freq = ((float)SAMPLES * (float)1000) / ((float)finishTime - (float)startTime);
-    Serial.println((String)"MaxTime: " + maxTime + " ms");
-    
-    Serial.print("    ");
-    Serial.println((String)"Time elapsed" + ((finishTime - startTime)/1000000)+" s" );
 }
 
 void setup(){
@@ -319,23 +286,4 @@ void setup(){
 }
 }
 void loop(){ 
-    //ERROR IF WE ARE HERE
-    /*
-    TimerHandle_t xTimer = xTimerCreate("PPMGenerator", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 0, taskPPMGenerator);
-    xTimerStart(xTimer, 0);  
-
-    semReadFlex = xSemaphoreCreateBinary();                              
-    xSemaphoreGive(semReadFlex);
-
-    semDataProcess = xSemaphoreCreateCounting(2, 0);
-
-    if (xSemaphoreTake(mtxLEDState, (TickType_t)5) == pdTRUE) {}
-
-    xTaskCreate(taskReadIMU, "readIMU", 115, NULL, 0, NULL); 
-
-    xTaskCreate(pointer to entry function, name, word allocated stack, void* parameters, priority, handle for task created)
-
-    xSemaphoreTake(semReadFlex, portMAX_DELAY);
-
-    xSemaphoreGive(semDataProcess);*/
 }
