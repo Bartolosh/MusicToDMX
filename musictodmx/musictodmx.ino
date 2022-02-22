@@ -2,6 +2,7 @@
 #include <semphr.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "manage_output.h"
 #include "fog.h"
@@ -222,7 +223,6 @@ void taskFog(void *pvParameters) {
  
   while (true) {
     vTaskSuspend(NULL);                                             
-    startTime = micros();
     if(uxSemaphoreGetCount(fog_mtx) == 1){
       xSemaphoreTake(fog_mtx, portMAX_DELAY);
     }
@@ -248,7 +248,7 @@ void setup(){
     fogSelector();
     init_fixture();
 
-    buffer = (uint32_t*)calloc(SAMPLES, sizeof(uint32_t));
+    buffer = (int32_t*)calloc(SAMPLES, sizeof(int32_t));
     
     buffer_mtx = xSemaphoreCreateMutex();   /* semaphores for buffer*/
     xSemaphoreGive(buffer_mtx);

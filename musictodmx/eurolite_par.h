@@ -5,10 +5,11 @@
 #ifndef EurolitePar_h
 #define EurolitePar_h
 
-#include <ArduinoRS485.h> // the ArduinoDMX library depends on ArduinoRS485
+#include <ArduinoRS485.h> /* ArduinoDMX library depends on ArduinoRS485 */
 #include <ArduinoDMX.h>
 #include "color.h"
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef struct{
     uint16_t start_address;
@@ -21,7 +22,7 @@ typedef struct{
     uint8_t current_mov;
 }eurolite_par;
 
-void init_eurolitepar(const eurolite_par *par, uint16_t start_address);
+void init_eurolitepar(eurolite_par *par, uint16_t start_address);
 
 void change_color(eurolite_par par,uint8_t color);
 

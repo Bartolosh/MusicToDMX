@@ -5,10 +5,12 @@
 #ifndef MovingHead_h
 #define MovingHead_h
 
-#include <ArduinoRS485.h> // the ArduinoDMX library depends on ArduinoRS485
+#include <ArduinoRS485.h> /* the ArduinoDMX library depends on ArduinoRS485 */
 #include <ArduinoDMX.h>
 #include "color.h"
-#include <stdlib.h> //usata per random
+#include <stdlib.h> /* random*/
+#include <stdint.h> 
+#include <stdint.h>
 
 #define HOLD  30
 
@@ -61,18 +63,18 @@ typedef struct{
 }moving_head;
 
 
-void init_movinghead(const moving_head *head, uint16_t start_address);
+void init_movinghead(moving_head *head, uint16_t start_address);
 
 void set_color(moving_head head,uint8_t color);
 
-void rotate(const moving_head *head, uint8_t speed, uint8_t color);
+void rotate(moving_head *head, uint8_t speed, uint8_t color);
 
 void strobe_head(moving_head head, uint8_t speed, uint8_t color);
 
-void up_down(const moving_head *head, uint8_t color, uint8_t speed);
+void up_down(moving_head *head, uint8_t color, uint8_t speed);
 
-void sx_dx(const moving_head *head, uint8_t color, uint8_t speed);
+void sx_dx(moving_head *head, uint8_t color, uint8_t speed);
 
-void mov_v(const moving_head *head, uint8_t color, uint8_t speed);
+void mov_v(moving_head *head, uint8_t color, uint8_t speed);
 
 #endif

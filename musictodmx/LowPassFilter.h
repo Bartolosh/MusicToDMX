@@ -21,12 +21,13 @@ fixed point precision: 16 bits
   actual attenuation = n/a
 
 */
+#include <stdint.h>
 
 #define LOWPASSFILTER_TAP_NUM 23
 
 typedef struct {
   int32_t history[LOWPASSFILTER_TAP_NUM];
-  unsigned int32_t last_index;
+  uint32_t last_index;
 } LowPassFilter;
 
 void LowPassFilter_init(LowPassFilter* f);

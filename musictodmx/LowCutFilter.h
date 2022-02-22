@@ -21,12 +21,13 @@ fixed point precision: 16 bits
   actual ripple = n/a
 
 */
+#include <stdint.h>
 
 #define LOWCUTFILTER_TAP_NUM 5
 
 typedef struct {
   int32_t history[LOWCUTFILTER_TAP_NUM];
-  unsigned int32_t last_index;
+  uint32_t last_index;
 } LowCutFilter;
 
 void LowCutFilter_init(LowCutFilter* f);
