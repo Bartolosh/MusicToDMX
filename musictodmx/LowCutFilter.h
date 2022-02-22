@@ -21,6 +21,7 @@ fixed point precision: 16 bits
   actual ripple = n/a
 
 */
+
 #include <stdint.h>
 
 #define LOWCUTFILTER_TAP_NUM 5

@@ -27,7 +27,7 @@ static int32_t filter_taps[LOWPASSFILTER_TAP_NUM] = {
 };
 
 void LowPassFilter_init(LowPassFilter* f) {
-  int16_t i;
+  uint8_t i;
   for(i = 0; i < LOWPASSFILTER_TAP_NUM; ++i)
     f->history[i] = 0;
   f->last_index = 0;

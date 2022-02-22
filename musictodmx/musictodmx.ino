@@ -2,7 +2,6 @@
 #include <semphr.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 
 #include "manage_output.h"
 #include "fog.h"
@@ -30,7 +29,7 @@ HardwareSerial Serial4(D0, D1);
 RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
 
 uint16_t bpm = 120;
-
+  
 /*-------------------- PERIODIC TASK ------------------------*/
 
 void taskInputRecording(void *pvParameters){
@@ -75,20 +74,19 @@ void taskInputProcessing(void *pvParameters){
 
   uint64_t lastChange = 0;
   uint64_t thisChange = 0;
-        
-  uint16_t cutted,filtered;
+  
+  int32_t cutted,filtered;
   uint16_t lvl_sound = 0, peak_to_peak = 0;
 
-  uint16_t max_peak_fil = 0;
-  uint16_t peak_fil = 0;
-  uint16_t min_peak_fil = 1023;
-  uint16_t max_peak = 0;
-  uint16_t min_peak = 0;
-  uint16_t n = 0;
+  int32_t max_peak_fil = 0;
+  int32_t peak_fil = 0;
+  int32_t min_peak_fil = 1023;
+  int32_t max_peak = 0;
+  int32_t min_peak = 0;
+  int32_t n = 0;
 
   LowCutFilter *cutfilter;
   LowPassFilter *filter;
-
   
   cutfilter = new LowCutFilter();
   filter = new LowPassFilter();
@@ -102,10 +100,9 @@ void taskInputProcessing(void *pvParameters){
     peak_fil = 0;
 
     for(uint8_t i = 0; i < SAMPLES; i++){
-      
+
       LowCutFilter_put(cutfilter,buffer[i]);
       cutted = LowCutFilter_get(cutfilter);
-      
       /* filtering signal */
       LowPassFilter_put(filter,cutted);
       filtered = LowPassFilter_get(filter);
@@ -267,11 +264,10 @@ void setup(){
     mov_mtx = xSemaphoreCreateBinary();
     
     color_mtx = xSemaphoreCreateBinary(); 
-    /*Serial.println("START");*/
 
     xTaskCreate(taskInputRecording, "inputRec", 79, NULL, 2, NULL); 
 
-    xTaskCreate(taskInputProcessing, "inputProc", 49, NULL,2 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc", 70/*49*/, NULL,2 , NULL);
     
     xTaskCreate(taskSendingOutput, "outputSend",63 , NULL, 1, NULL); 
     

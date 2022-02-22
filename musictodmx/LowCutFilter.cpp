@@ -10,7 +10,7 @@ static int32_t filter_taps[LOWCUTFILTER_TAP_NUM] = {
 };
 
 void LowCutFilter_init(LowCutFilter* f) {
-  int32_t i;
+  int8_t i;
   for(i = 0; i < LOWCUTFILTER_TAP_NUM; ++i)
     f->history[i] = 0;
   f->last_index = 0;

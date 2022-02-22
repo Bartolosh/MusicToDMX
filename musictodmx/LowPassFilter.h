@@ -8,7 +8,7 @@ FIR filter designed with
 
 sampling frequency: 4000 Hz
 
-fixed point precision: 16 bits
+fixed point32_t precision: 16 bits
 
 * 0 Hz - 300 Hz
   gain = 1
@@ -21,6 +21,7 @@ fixed point precision: 16 bits
   actual attenuation = n/a
 
 */
+
 #include <stdint.h>
 
 #define LOWPASSFILTER_TAP_NUM 23
