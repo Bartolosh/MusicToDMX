@@ -238,17 +238,6 @@ void taskFire(void *pvParameters) {
   }
 }
 
-void taskVal(void *pvParameters) {
-  TickType_t xLastWakeTime_val;
-
-  xLastWakeTime_val = xTaskGetTickCount();
-  while(true){
-    Serial.println("memory =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("outputSend"))));
-  
-     vTaskDelayUntil(&xLastWakeTime_val,((TickType_t)400/portTICK_PERIOD_MS));
-  }
-}
-
 void setup(){
    
     Serial.begin(115200);
@@ -280,9 +269,7 @@ void setup(){
 
     xTaskCreate(taskInputProcessing, "inputProc", 51, NULL,2 , NULL);
     
-    xTaskCreate(taskSendingOutput, "outputSend", 60, NULL, 1, NULL); 
-    
-    xTaskCreate(taskVal, "taskVal", 90, NULL, 1, NULL);
+    xTaskCreate(taskSendingOutput, "outputSend", 60, NULL, 1, NULL);  
     
     xTaskCreate(taskFog, "fogStart", 27, NULL, 3, &taskFogHandle);
     xTaskCreate(taskFire, "fireStart", 27, NULL, 3, &taskFireHandle);
