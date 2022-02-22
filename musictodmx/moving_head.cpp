@@ -1,6 +1,6 @@
 #include "moving_head.h"
 
-void init_movinghead(moving_head *head, int16_t start_address){
+void init_movinghead(const moving_head *head, int16_t start_address){
     head->start_address = start_address;
     head->ch_dimmer = start_address + 5;
     head->ch_color = start_address + 7;
@@ -39,7 +39,7 @@ void set_color(moving_head head,uint8_t color){
     DMX.write(head.ch_dimmer, 100);
 }
 
-void rotate(moving_head *head, uint8_t color, uint8_t speed){
+void rotate(const moving_head *head, uint8_t color, uint8_t speed){
     set_color(*head, color);
     DMX.write(head->ch_speed, speed);
     
@@ -110,7 +110,7 @@ void strobe_head(moving_head head, uint8_t speed, uint8_t color){
     DMX.write(head.ch_strobe, speed);
 }
 
-void up_down(moving_head *head, uint8_t color, uint8_t speed){
+void up_down(const moving_head *head, uint8_t color, uint8_t speed){
     set_color(*head, color);
 
     DMX.write(head->ch_speed, (speed));
@@ -134,7 +134,7 @@ void up_down(moving_head *head, uint8_t color, uint8_t speed){
     }
 }
 
-void sx_dx(moving_head *head, uint8_t color, uint8_t speed){
+void sx_dx(const moving_head *head, uint8_t color, uint8_t speed){
     set_color(*head, color);
 
     DMX.write(head->ch_speed, speed);
@@ -159,7 +159,7 @@ void sx_dx(moving_head *head, uint8_t color, uint8_t speed){
 }
 
 
-void mov_v(moving_head *head, uint8_t color, uint8_t speed){
+void mov_v(const moving_head *head, uint8_t color, uint8_t speed){
     set_color(*head, color);
 
     DMX.write(head->ch_speed, speed);

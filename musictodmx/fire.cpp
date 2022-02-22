@@ -15,17 +15,17 @@ void fireHandler(void) {
   portYIELD_FROM_ISR(xYieldRequired);
 }
 
-void fireSelector() {
+void fireSelector(void) {
   pinMode(FIRE_BUTTON_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(FIRE_BUTTON_PIN), fireHandler, FALLING);
 }
 
 
-void fireStart(){
+void fireStart(void){
     DMX.write(fire_channel, 255);
     DMX.write(fire_channel+1, 50);    
 }
 
-void fireStop(){
+void fireStop(void){
     DMX.write(fire_channel, 0);
 }

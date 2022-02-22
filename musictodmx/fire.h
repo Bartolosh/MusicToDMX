@@ -15,9 +15,9 @@ extern TaskHandle_t taskFireHandle;
 
 extern void init_fire(uint16_t channel);
 extern void fireHandler(void);
-extern void fireSelector();
+extern void fireSelector(void);
 
-extern void fireStart();
-extern void fireStop();
+extern void fireStart(void);
+extern void fireStop(void);
 
 #endif

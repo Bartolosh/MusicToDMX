@@ -3,7 +3,7 @@
 #define ROTATE 0
 #define UPNDOWN 1
 
-void init_eurolitepar(eurolite_par *par, int start_address){
+void init_eurolitepar(const eurolite_par *par, int start_address){
     par->start_address = start_address;
     par->ch_red = start_address;
     par->ch_blue = start_address+2;

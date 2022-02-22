@@ -17,9 +17,9 @@ extern TaskHandle_t taskFogHandle;
 
 extern void init_fog(uint16_t channel);
 extern void fogHandler(void);
-extern void fogSelector();
+extern void fogSelector(void);
 
-extern void fogStart();
-extern void fogStop();
+extern void fogStart(void);
+extern void fogStop(void);
 
 #endif

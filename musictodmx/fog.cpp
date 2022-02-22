@@ -15,16 +15,16 @@ void fogHandler(void) {
   portYIELD_FROM_ISR(xYieldRequired);
 }
 
-void fogSelector() {
+void fogSelector(void) {
   pinMode(FOG_BUTTON_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(FOG_BUTTON_PIN), fogHandler, FALLING);
 }
 
-void fogStart(){
+void fogStart(void){
     DMX.write(fog_channel, 255);
 }
 
 
-void fogStop(){
+void fogStop(void){
     DMX.write(fog_channel, 0);
 }

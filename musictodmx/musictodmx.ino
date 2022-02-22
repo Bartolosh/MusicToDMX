@@ -1,5 +1,4 @@
 #include <STM32FreeRTOS.h>
-#include <timers.h>
 #include <semphr.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,14 +23,7 @@ SemaphoreHandle_t mov_mtx;
 SemaphoreHandle_t fog_mtx;
 SemaphoreHandle_t fire_mtx;
 
-LowCutFilter *cutfilter;
-LowPassFilter *filter;
-/*int buffer[SAMPLES];*/
 int32_t* buffer;
-uint16_t max_peak = 0;
-uint16_t min_peak = 0;
-uint16_t n = 0;
-
 
 HardwareSerial Serial4(D0, D1);
 RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
@@ -89,6 +81,18 @@ void taskInputProcessing(void *pvParameters){
   uint16_t max_peak_fil = 0;
   uint16_t peak_fil = 0;
   uint16_t min_peak_fil = 1023;
+  uint16_t max_peak = 0;
+  uint16_t min_peak = 0;
+  uint16_t n = 0;
+
+  LowCutFilter *cutfilter;
+  LowPassFilter *filter;
+
+  
+  cutfilter = new LowCutFilter();
+  filter = new LowPassFilter();
+  LowCutFilter_init(cutfilter);
+  LowPassFilter_init(filter);
 
   while(true){
     
@@ -243,10 +247,6 @@ void setup(){
     fireSelector();
     fogSelector();
     init_fixture();
-    cutfilter = new LowCutFilter();
-    filter = new LowPassFilter();
-    LowCutFilter_init(cutfilter);
-    LowPassFilter_init(filter);
 
     buffer = (uint32_t*)calloc(SAMPLES, sizeof(uint32_t));
     

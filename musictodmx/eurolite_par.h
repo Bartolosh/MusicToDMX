@@ -21,7 +21,7 @@ typedef struct{
     uint8_t current_mov;
 }eurolite_par;
 
-void init_eurolitepar(eurolite_par *par, uint16_t start_address);
+void init_eurolitepar(const eurolite_par *par, uint16_t start_address);
 
 void change_color(eurolite_par par,uint8_t color);
 
