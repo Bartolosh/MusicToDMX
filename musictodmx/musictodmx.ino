@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #include "manage_output.h"
 #include "fog.h"
 #include "fire.h"
@@ -94,9 +95,9 @@ void taskInputProcessing(void *pvParameters){
   LowPassFilter_init(filter);
 
   while(true){
-    
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
+
     peak_fil = 0;
 
     for(uint8_t i = 0; i < SAMPLES; i++){
@@ -149,7 +150,7 @@ void taskInputProcessing(void *pvParameters){
       peak_to_peak = 0;
       xSemaphoreGive(mov_mtx);
     }   
-        
+
   }
 }
 
@@ -211,8 +212,7 @@ void taskSendingOutput(void *pvParameters){
         }
         send_output(bpm, light_mode, mov_mode, fog_state, fire_state);
         vTaskDelayUntil(&xLastWakeTime_out,xFreq_out);
-        
-    }
+     }
 }
 
 /*-------------------- ASYNC TASK ------------------------*/
@@ -235,6 +235,17 @@ void taskFire(void *pvParameters) {
       xSemaphoreTake(fire_mtx, portMAX_DELAY);
     }
     
+  }
+}
+
+void taskVal(void *pvParameters) {
+  TickType_t xLastWakeTime_val;
+
+  xLastWakeTime_val = xTaskGetTickCount();
+  while(true){
+    Serial.println("memory =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("outputSend"))));
+  
+     vTaskDelayUntil(&xLastWakeTime_val,((TickType_t)400/portTICK_PERIOD_MS));
   }
 }
 
@@ -267,9 +278,11 @@ void setup(){
 
     xTaskCreate(taskInputRecording, "inputRec", 79, NULL, 2, NULL); 
 
-    xTaskCreate(taskInputProcessing, "inputProc", 70/*49*/, NULL,2 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc", 51, NULL,2 , NULL);
     
-    xTaskCreate(taskSendingOutput, "outputSend",63 , NULL, 1, NULL); 
+    xTaskCreate(taskSendingOutput, "outputSend", 60, NULL, 1, NULL); 
+    
+    xTaskCreate(taskVal, "taskVal", 90, NULL, 1, NULL);
     
     xTaskCreate(taskFog, "fogStart", 27, NULL, 3, &taskFogHandle);
     xTaskCreate(taskFire, "fireStart", 27, NULL, 3, &taskFireHandle);
