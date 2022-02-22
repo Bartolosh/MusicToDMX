@@ -26,7 +26,8 @@ SemaphoreHandle_t fire_mtx;
 
 LowCutFilter *cutfilter;
 LowPassFilter *filter;
-int buffer[SAMPLES];
+/*int buffer[SAMPLES];*/
+int* buffer;
 int max_peak = 0, mean_peak = 0, mean_peak_prev = 0, imp_sum = 0;
 int min_peak = 0;
 int n = 0, counter_peaks_buffer = 0;
@@ -55,7 +56,7 @@ void taskInputRecording(void *pvParameters){
     xLastWakeTime= xTaskGetTickCount();
     
     while(true){
-        
+       
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
        
         xNextRead = xTaskGetTickCount();
@@ -210,7 +211,6 @@ void taskSendingOutput(void *pvParameters){
           count_fire=0;
         }
         send_output(bpm, light_mode, mov_mode, fog_state, fire_state);
-
         vTaskDelayUntil(&xLastWakeTime_out,xFreq_out);
         
     }
@@ -218,7 +218,7 @@ void taskSendingOutput(void *pvParameters){
 
 /*-------------------- ASYNC TASK ------------------------*/
 void taskFog(void *pvParameters) {
-    /* Block for DURATION. */
+ 
   while (true) {
     vTaskSuspend(NULL);                                             
     startTime = micros();
@@ -231,7 +231,7 @@ void taskFog(void *pvParameters) {
 
 void taskFire(void *pvParameters) {
   while (true) {
-    vTaskSuspend(NULL);                                                 /* suspends itself */
+    vTaskSuspend(NULL);                                    
     
     if(uxSemaphoreGetCount(fire_mtx) == 1){
       xSemaphoreTake(fire_mtx, portMAX_DELAY);
@@ -240,9 +240,20 @@ void taskFire(void *pvParameters) {
   }
 }
 
+
+void taskVal(void *pvParameters) {
+  TickType_t xLastWakeTime_val;
+
+  xLastWakeTime_val = xTaskGetTickCount();
+  while(true){
+    Serial.println("memory =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("outputSend"))));
+  
+     vTaskDelayUntil(&xLastWakeTime_val,((TickType_t)400/portTICK_PERIOD_MS));
+  }
+}
+
 void setup(){
    
- while (1) { 
     Serial.begin(115200);
     fireSelector();
     fogSelector();
@@ -252,6 +263,8 @@ void setup(){
     LowCutFilter_init(cutfilter);
     LowPassFilter_init(filter);
 
+    buffer = (int*)calloc(SAMPLES, sizeof(int));
+    
     buffer_mtx = xSemaphoreCreateMutex();   /* semaphores for buffer*/
     xSemaphoreGive(buffer_mtx);
     
@@ -269,21 +282,23 @@ void setup(){
     mov_mtx = xSemaphoreCreateBinary();
     
     color_mtx = xSemaphoreCreateBinary(); 
+    /*Serial.println("START");*/
 
+    xTaskCreate(taskInputRecording, "inputRec", 79, NULL, 2, NULL); 
 
-    xTaskCreate(taskInputRecording, "inputRec", 81, NULL, 2, NULL); 
-
-    xTaskCreate(taskInputProcessing, "inputProc", 47, NULL,2 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc", 49, NULL,2 , NULL);
     
-    xTaskCreate(taskSendingOutput, "outputSend", 63, NULL, 1, NULL); 
+    xTaskCreate(taskSendingOutput, "outputSend",63 , NULL, 1, NULL); 
 
+
+    /*xTaskCreate(taskVal, "validatetask", 80, NULL, 1, NULL);*/
     
     xTaskCreate(taskFog, "fogStart", 27, NULL, 3, &taskFogHandle);
     xTaskCreate(taskFire, "fireStart", 27, NULL, 3, &taskFireHandle);
     
     vTaskStartScheduler();                                                /* explicit call needed */
     Serial.println("Insufficient RAM");
+
 }
-}
-void loop(){ 
-}
+
+void loop(){}
