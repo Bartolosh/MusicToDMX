@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "manage_output.h"
-#include "list_custom.h"
 #include "fog.h"
 #include "fire.h"
 #include "LowPassFilter.h"
@@ -49,7 +48,7 @@ void taskInputRecording(void *pvParameters){
 
     TickType_t xLastWakeTime;
     TickType_t xNextRead;
-    /* xFreq is set to 1/4  of seconds but need to be set after ti100mer analysis of processing and output */
+    /* xFreq is set to 1/4  of seconds */
     const TickType_t xFreq = 250 / (portTICK_PERIOD_MS);
     const TickType_t xFreqRec = 1 / (portTICK_PERIOD_MS);
 
@@ -58,7 +57,7 @@ void taskInputRecording(void *pvParameters){
     while(true){
         
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-        /*startTime = millis();*/
+       
         xNextRead = xTaskGetTickCount();
         while(c < SAMPLES){
             
@@ -74,8 +73,7 @@ void taskInputRecording(void *pvParameters){
         if(uxSemaphoreGetCount(new_data_mtx) == 0){
             xSemaphoreGive(new_data_mtx);
         }
-
-        
+       
         xSemaphoreGive(buffer_mtx);
         
         vTaskDelayUntil(&xLastWakeTime, xFreq);
@@ -84,7 +82,6 @@ void taskInputRecording(void *pvParameters){
 }
 
 void taskInputProcessing(void *pvParameters){
-
 
   unsigned long lastChange = 0;
   unsigned long thisChange = 0;
@@ -100,11 +97,10 @@ void taskInputProcessing(void *pvParameters){
     
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-    startTime = micros();
     peak_fil = 0;
 
     for(int i = 0; i < SAMPLES; i++){
-      /* cutting low freq (0 Hz -20 Hz) */
+      
       LowCutFilter_put(cutfilter,buffer[i]);
       cutted = LowCutFilter_get(cutfilter);
       
@@ -121,15 +117,14 @@ void taskInputProcessing(void *pvParameters){
     min_peak_fil = min(min_peak_fil, peak_fil);
 
     n++;
-        
-    /* Each 100 iterations,reset the minimum and maximum detected values.
-     This helps if the sound level changes and we want our code to adapt to it.*/
-    if((n%100) == 0){
+
+    /* each 60 iterations reset peak for lighting movement */
+    if((n%60) == 0){
       lvl_sound = 0;
     }
 
+    /* each 80 iterations reset the peak to adapt light  */
     if((n%80) == 0){
-      
       max_peak_fil = 0;
       min_peak_fil = 1023;
     }
@@ -290,26 +285,31 @@ void setup(){
     LowCutFilter_init(cutfilter);
     LowPassFilter_init(filter);
 
-    buffer_mtx = xSemaphoreCreateMutex();                               /* semaphores for buffer*/
-    new_data_mtx = xSemaphoreCreateBinary();
-    bpm_mtx = xSemaphoreCreateMutex();
-    fog_mtx = xSemaphoreCreateBinary();
-    mov_mtx = xSemaphoreCreateBinary();
-    color_mtx = xSemaphoreCreateBinary();
-    fire_mtx = xSemaphoreCreateBinary(); 
-
+    buffer_mtx = xSemaphoreCreateMutex();   /* semaphores for buffer*/
     xSemaphoreGive(buffer_mtx);
+    
+    bpm_mtx = xSemaphoreCreateMutex();
     xSemaphoreGive(bpm_mtx);
+    
+    fog_mtx = xSemaphoreCreateBinary();
     xSemaphoreGive(fog_mtx);
+   
+    fire_mtx = xSemaphoreCreateBinary();
     xSemaphoreGive(fire_mtx);
 
+    new_data_mtx = xSemaphoreCreateBinary();
+    
+    mov_mtx = xSemaphoreCreateBinary();
+    
+    color_mtx = xSemaphoreCreateBinary(); 
+
+
     xTaskCreate(taskInputRecording, "inputRec", 81, NULL, 2, NULL); 
-    /* this task must have higher priority than inputRec bc otherwise it doesn't run */
+
     xTaskCreate(taskInputProcessing, "inputProc", 47, NULL,2 , NULL);
-    /* ELABORATION TASK */
+    
     xTaskCreate(taskSendingOutput, "outputSend", 63, NULL, 1, NULL); 
-    //TimerHandle_t xTimer = xTimerCreate("Valuate", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, (void*)3, taskValuate);
-    //xTimerStart(xTimer, 0);   
+
     
     xTaskCreate(taskFog, "fogStart", 27, NULL, 3, &taskFogHandle);
     xTaskCreate(taskFire, "fireStart", 27, NULL, 3, &taskFireHandle);
@@ -318,7 +318,7 @@ void setup(){
     Serial.println("Insufficient RAM");
 }
 }
-void loop(){
+void loop(){ 
     //ERROR IF WE ARE HERE
     /*
     TimerHandle_t xTimer = xTimerCreate("PPMGenerator", pdMS_TO_TICKS(FRAME_LENGTH), pdTRUE, 0, taskPPMGenerator);
