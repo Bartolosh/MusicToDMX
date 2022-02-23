@@ -25,7 +25,8 @@ SemaphoreHandle_t fire_mtx;
 
 int32_t* buffer;
 
-RS485Class RS485(Serial, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
+HardwareSerial Serial4(D0, D1);
+RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
 
 uint16_t bpm = 120;
   
@@ -242,9 +243,8 @@ void taskFire(void *pvParameters) {
 }
 
 void setup(){
-    Serial.setRx(D0);
-    Serial.setTx(D1);
-    
+   
+    Serial.begin(115200);
     fireSelector();
     fogSelector();
     init_fixture();
@@ -269,11 +269,12 @@ void setup(){
     
     color_mtx = xSemaphoreCreateBinary(); 
 
-    xTaskCreate(taskInputRecording, "inputRec", 119/*79*/, NULL, 2, NULL); 
+    Serial.println("OK");
+    xTaskCreate(taskInputRecording, "inputRec", 79, NULL, 2, NULL); 
 
-    xTaskCreate(taskInputProcessing, "inputProc",76 /*51*/, NULL,2 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc", 51, NULL,2 , NULL);
     
-    xTaskCreate(taskSendingOutput, "outputSend", 82/*60*/, NULL, 1, NULL);  
+    xTaskCreate(taskSendingOutput, "outputSend", 60, NULL, 1, NULL);  
     
     xTaskCreate(taskFog, "fogStart", 27, NULL, 3, &taskFogHandle);
     xTaskCreate(taskFire, "fireStart", 27, NULL, 3, &taskFireHandle);
