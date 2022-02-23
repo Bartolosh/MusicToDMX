@@ -271,10 +271,10 @@ void setup(){
 
     xTaskCreate(taskInputRecording, "inputRec", 268/*119*/, NULL, 2, NULL); 
 
-    xTaskCreate(taskInputProcessing, "inputProc",79 /*76*/, NULL,2 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc",89 /*76*/, NULL,2 , NULL);
     
-    xTaskCreate(taskSendingOutput, "outputSend", 125/*82*/, NULL, 1, NULL);  
-    
+    xTaskCreate(taskSendingOutput, "outputSend", 115/*82*/, NULL, 1, NULL);  
+
     xTaskCreate(taskFog, "fogStart", 27, NULL, 3, &taskFogHandle);
     xTaskCreate(taskFire, "fireStart", 27, NULL, 3, &taskFireHandle);
     
