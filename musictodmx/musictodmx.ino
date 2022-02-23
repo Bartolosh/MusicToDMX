@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #include "manage_output.h"
 #include "fog.h"
 #include "fire.h"
@@ -95,9 +94,9 @@ void taskInputProcessing(void *pvParameters){
   LowPassFilter_init(filter);
 
   while(true){
+    
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-
     peak_fil = 0;
 
     for(uint8_t i = 0; i < SAMPLES; i++){
@@ -150,7 +149,7 @@ void taskInputProcessing(void *pvParameters){
       peak_to_peak = 0;
       xSemaphoreGive(mov_mtx);
     }   
-
+        
   }
 }
 
@@ -166,8 +165,12 @@ void taskSendingOutput(void *pvParameters){
     uint8_t fire_state = STOP;
     uint32_t duration = 0, duration_end = 0;
     uint8_t count_fire = 0;
+    int tmp_bpm = 120;
 
     while(true){
+        xSemaphoreTake(bpm_mtx, portMAX_DELAY);
+        tmp_bpm = bpm;
+        xSemaphoreGive(bpm_mtx);
         
         if(uxSemaphoreGetCount(color_mtx) > 0){
           
@@ -210,9 +213,10 @@ void taskSendingOutput(void *pvParameters){
           fire_state=STOP;
           count_fire=0;
         }
-        send_output(bpm, light_mode, mov_mode, fog_state, fire_state);
+        send_output(tmp_bpm, light_mode, mov_mode, fog_state, fire_state);
         vTaskDelayUntil(&xLastWakeTime_out,xFreq_out);
-     }
+        
+    }
 }
 
 /*-------------------- ASYNC TASK ------------------------*/
@@ -265,6 +269,7 @@ void setup(){
     
     color_mtx = xSemaphoreCreateBinary(); 
 
+    Serial.println("OK");
     xTaskCreate(taskInputRecording, "inputRec", 79, NULL, 2, NULL); 
 
     xTaskCreate(taskInputProcessing, "inputProc", 51, NULL,2 , NULL);
