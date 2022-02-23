@@ -270,9 +270,9 @@ void setup(){
     color_mtx = xSemaphoreCreateBinary(); 
 
    
-    xTaskCreate(taskInputRecording, "inputRec", 119, NULL, 2, NULL); 
+    xTaskCreate(taskInputRecording, "inputRec", 123, NULL, 2, NULL); 
 
-    xTaskCreate(taskInputProcessing, "inputProc", 76, NULL,2 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc", 83, NULL,2 , NULL);
     
     xTaskCreate(taskSendingOutput, "sendOutput", 82, NULL, 1, NULL);  
     
