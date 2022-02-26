@@ -8,9 +8,9 @@ void init_fire(uint16_t ch){
 
 TaskHandle_t taskFireHandle = NULL;
 
-//function that manage interrupt
+/*function that manage interrupt*/
 void fireHandler(void) {
-  //this function awake the task 
+  /*this function awake the task*/ 
   BaseType_t xYieldRequired = xTaskResumeFromISR(taskFireHandle);   /* INCLUDE_vTaskSuspend and INCLUDE_xTaskResumeFromISR must be defined as 1 */
   portYIELD_FROM_ISR(xYieldRequired);
 }
@@ -23,7 +23,7 @@ void fireSelector(void) {
 
 void fireStart(void){
     DMX.write(fire_channel, 255);
-    DMX.write(fire_channel+1, 50);    
+    DMX.write(fire_channel+1, FIRE_DURATION);    
 }
 
 void fireStop(void){

@@ -3,11 +3,11 @@
 
 #include <Arduino.h>
 #include <STM32FreeRTOS.h>
-#include <ArduinoRS485.h> // the ArduinoDMX library depends on ArduinoRS485
+#include <ArduinoRS485.h> 
 #include <ArduinoDMX.h>
 
 #define FOG_BUTTON_PIN      D3
-#define FOG_DURATION_TIME   1500 //milliseconds
+#define FOG_DURATION_TIME   1500
 
 #define START   1
 #define STOP    0

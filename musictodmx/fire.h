@@ -3,11 +3,11 @@
 
 #include <Arduino.h>
 #include <STM32FreeRTOS.h>
-#include <ArduinoRS485.h> // the ArduinoDMX library depends on ArduinoRS485
+#include <ArduinoRS485.h> 
 #include <ArduinoDMX.h>
 
 #define FIRE_BUTTON_PIN D4
-#define FIRE_DURATION   34 //flame's duration [0-255]
+#define FIRE_DURATION   50 /*flame's duration [0-255]*/
 
 extern uint16_t fire_channel;
 extern uint16_t fire_channel_duration;

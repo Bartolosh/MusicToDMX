@@ -245,7 +245,7 @@ void taskFire(void *pvParameters) {
     delayMicroseconds(10);
     digitalWrite(TRIGPIN,LOW);
     
-    vTaskDelay(11/portTICK_PERIOD_MS);
+    vTaskDelay(11/portTICK_PERIOD_MS); /*11 millis for 1.5 m*/
     
     obstacle = digitalRead(ECHOPIN);
     if(obstacle == 1){
