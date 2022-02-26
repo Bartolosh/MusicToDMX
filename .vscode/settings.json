@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "stdio.h": "c",
-        "arm_math.h": "c",
-        "arm_const_structs.h": "c",
-        "cmsis_gcc.h": "c"
-    }
-}

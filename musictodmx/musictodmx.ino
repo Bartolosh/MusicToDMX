@@ -23,7 +23,7 @@ SemaphoreHandle_t mov_mtx;
 SemaphoreHandle_t fog_mtx;
 SemaphoreHandle_t fire_mtx;
 
-int32_t buffer[SAMPLES];
+int32_t buffer[SAMPLES] = {0};
 
 RS485Class RS485(Serial, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
 
@@ -43,9 +43,8 @@ void taskInputRecording(void *pvParameters){
     xLastWakeTime= xTaskGetTickCount();
     
     while(true){
-       
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-       
+        
         xNextRead = xTaskGetTickCount();
         while(c < SAMPLES){
             
@@ -93,7 +92,6 @@ void taskInputProcessing(void *pvParameters){
   LowPassFilter_init(filter);
 
   while(true){
-    
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     peak_fil = 0;
@@ -222,7 +220,7 @@ void taskSendingOutput(void *pvParameters){
 void taskFog(void *pvParameters) {
  
   while (true) {
-    vTaskSuspend(NULL);                                             
+    vTaskSuspend(NULL);                                         
     if(uxSemaphoreGetCount(fog_mtx) == 1){
       xSemaphoreTake(fog_mtx, portMAX_DELAY);
     }
@@ -233,7 +231,6 @@ void taskFog(void *pvParameters) {
 void taskFire(void *pvParameters) {
   while (true) {
     vTaskSuspend(NULL);                                    
-    
     if(uxSemaphoreGetCount(fire_mtx) == 1){
       xSemaphoreTake(fire_mtx, portMAX_DELAY);
     }
@@ -241,15 +238,16 @@ void taskFire(void *pvParameters) {
   }
 }
 
+
+
 void setup(){
-    Serial.setRx(D0);
-    Serial.setTx(D1);
     
     fireSelector();
     fogSelector();
     init_fixture();
-
-    /*buffer = (int32_t*)calloc(SAMPLES, sizeof(int32_t));*/
+    Serial.setTx(D1);
+    Serial.setRx(D0);
+    Serial.begin(250000);
     
     buffer_mtx = xSemaphoreCreateMutex();   /* semaphores for buffer*/
     xSemaphoreGive(buffer_mtx);
@@ -269,17 +267,17 @@ void setup(){
     
     color_mtx = xSemaphoreCreateBinary(); 
 
-    xTaskCreate(taskInputRecording, "inputRec", 268/*119*/, NULL, 2, NULL); 
+    xTaskCreate(taskInputRecording, "inputRec", 81, NULL, 1, NULL); 
 
-    xTaskCreate(taskInputProcessing, "inputProc",89 /*76*/, NULL,2 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc",51, NULL,1, NULL);
     
-    xTaskCreate(taskSendingOutput, "outputSend", 115/*82*/, NULL, 1, NULL);  
+    xTaskCreate(taskSendingOutput, "outputSend", 65, NULL, 0, NULL);
 
-    xTaskCreate(taskFog, "fogStart", 27, NULL, 3, &taskFogHandle);
+    xTaskCreate(taskFog, "fogStart", 27, NULL, 2, &taskFogHandle);
     xTaskCreate(taskFire, "fireStart", 27, NULL, 3, &taskFireHandle);
     
     vTaskStartScheduler();                                                /* explicit call needed */
-    Serial.println("Insufficient RAM");
+    
 
 }
 
