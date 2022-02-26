@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #include "manage_output.h"
 #include "fog.h"
 #include "fire.h"
@@ -15,6 +16,9 @@
 #define THRESHOLD_MOV 400   
 #define THRESHOLD 350 
 
+#define TRIGPIN D8
+#define ECHOPIN D10
+
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
 SemaphoreHandle_t bpm_mtx;
@@ -23,9 +27,10 @@ SemaphoreHandle_t mov_mtx;
 SemaphoreHandle_t fog_mtx;
 SemaphoreHandle_t fire_mtx;
 
-int32_t* buffer;
+int32_t buffer[SAMPLES] = {0};
 
 RS485Class RS485(Serial, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
+
 
 uint16_t bpm = 120;
   
@@ -43,9 +48,8 @@ void taskInputRecording(void *pvParameters){
     xLastWakeTime= xTaskGetTickCount();
     
     while(true){
-       
         xSemaphoreTake(buffer_mtx, portMAX_DELAY);
-       
+        
         xNextRead = xTaskGetTickCount();
         while(c < SAMPLES){
             
@@ -93,7 +97,6 @@ void taskInputProcessing(void *pvParameters){
   LowPassFilter_init(filter);
 
   while(true){
-    
     xSemaphoreTake(new_data_mtx, portMAX_DELAY);
     xSemaphoreTake(buffer_mtx, portMAX_DELAY);
     peak_fil = 0;
@@ -164,7 +167,7 @@ void taskSendingOutput(void *pvParameters){
     uint8_t fire_state = STOP;
     uint32_t duration = 0, duration_end = 0;
     uint8_t count_fire = 0;
-    int tmp_bpm = 120;
+    uint16_t tmp_bpm = 120;
 
     while(true){
         xSemaphoreTake(bpm_mtx, portMAX_DELAY);
@@ -222,7 +225,7 @@ void taskSendingOutput(void *pvParameters){
 void taskFog(void *pvParameters) {
  
   while (true) {
-    vTaskSuspend(NULL);                                             
+    vTaskSuspend(NULL);                                         
     if(uxSemaphoreGetCount(fog_mtx) == 1){
       xSemaphoreTake(fog_mtx, portMAX_DELAY);
     }
@@ -231,25 +234,43 @@ void taskFog(void *pvParameters) {
 
 
 void taskFire(void *pvParameters) {
+
+  uint8_t obstacle = 0;
   while (true) {
-    vTaskSuspend(NULL);                                    
+    vTaskSuspend(NULL);
+   
+    digitalWrite( TRIGPIN, LOW );
+    delayMicroseconds(2);
+    digitalWrite(TRIGPIN,HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIGPIN,LOW);
     
-    if(uxSemaphoreGetCount(fire_mtx) == 1){
-      xSemaphoreTake(fire_mtx, portMAX_DELAY);
+    vTaskDelay(11/portTICK_PERIOD_MS);
+    
+    obstacle = digitalRead(ECHOPIN);
+    if(obstacle == 1){
+          if(uxSemaphoreGetCount(fire_mtx) == 1){
+            xSemaphoreTake(fire_mtx, portMAX_DELAY);
+          }
     }
-    
+   
   }
+ 
 }
 
+
 void setup(){
-   
-    Serial.setTx(D1);
-    Serial.setRx(D0);
+
+    pinMode(TRIGPIN, OUTPUT);
+    pinMode(ECHOPIN, INPUT);
+    
     fireSelector();
     fogSelector();
     init_fixture();
+    Serial.setTx(D1);
+    Serial.setRx(D0);
+    Serial.begin(250000);
 
-    buffer = (int32_t*)calloc(SAMPLES, sizeof(int32_t));
     
     buffer_mtx = xSemaphoreCreateMutex();   /* semaphores for buffer*/
     xSemaphoreGive(buffer_mtx);
@@ -269,17 +290,17 @@ void setup(){
     
     color_mtx = xSemaphoreCreateBinary(); 
 
-   
-    xTaskCreate(taskInputRecording, "inputRec", 123, NULL, 2, NULL); 
+    xTaskCreate(taskInputRecording, "inputRec", 81, NULL, 4, NULL); 
 
-    xTaskCreate(taskInputProcessing, "inputProc", 83, NULL,2 , NULL);
+    xTaskCreate(taskInputProcessing, "inputProc",51, NULL,1, NULL);
     
-    xTaskCreate(taskSendingOutput, "sendOutput", 82, NULL, 1, NULL);  
+    xTaskCreate(taskSendingOutput, "outputSend", 65, NULL, 0, NULL);
+
+    xTaskCreate(taskFog, "fogStart", 27, NULL, 2, &taskFogHandle);
+    xTaskCreate(taskFire, "fireStart", 30, NULL, 3, &taskFireHandle);
     
-    xTaskCreate(taskFog, "fog", 27, NULL, 3, &taskFogHandle);
-    xTaskCreate(taskFire, "fire", 27, NULL, 3, &taskFireHandle);
+    vTaskStartScheduler();                                                /* explicit call needed */
     
-    vTaskStartScheduler();             
 
 }
 

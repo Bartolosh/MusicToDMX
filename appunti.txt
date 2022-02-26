@@ -18,3 +18,9 @@ NUOVI TEMPI (periodo 250)
 	fog = 37 micros
 	fire = 35 micros
 
+
+SENSORE FIAMME
+tempo 42 micros
+memoria:
+Lo sketch usa 41380 byte (3%) dello spazio disponibile per i programmi. Il massimo è 1048576 byte.
+Le variabili globali usano 2936 byte (2%) di memoria dinamica, lasciando altri 95368 byte liberi per le variabili locali. Il massimo è 98304 byte.
