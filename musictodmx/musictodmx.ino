@@ -29,13 +29,8 @@ SemaphoreHandle_t fire_mtx;
 
 int32_t buffer[SAMPLES] = {0};
 
-HardwareSerial Serial4(D0,D1);
+RS485Class RS485(Serial, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
 
-RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
-
-HardwareTimer *firstTimer = new HardwareTimer(TIM1);
-    
-HardwareTimer *secondTimer = new HardwareTimer(TIM2);
 
 uint16_t bpm = 120;
   
@@ -237,63 +232,6 @@ void taskFog(void *pvParameters) {
    }
 }
 
-long startTime = 0; 
-long finishTime = 0; 
-
-uint8_t counter = 0;
-
-void sendLow(void)
-{ 
-  long duration;
-  long distance;
-  uint8_t i= 0;
-  digitalWrite(TRIGPIN,LOW);
-  duration = pulseIn(ECHOPIN, HIGH, 9000);
- 
-  Serial.println(duration);
-  secondTimer->detachInterrupt();
-  //Serial.println(micros()-startTime);
-  /*if (duration != 0){
-    distance = 0.034 * duration / 2;
-    secondTimer->detachInterrupt();
-    counter = 0;
-    Serial.println(distance);
-    if(distance>100){
-      if(uxSemaphoreGetCount(fire_mtx) == 1){
-        xSemaphoreTake(fire_mtx, portMAX_DELAY);
-      }
-    }
-  }
-  else{
-    counter++;
-    if(counter ==20){
-      secondTimer->detachInterrupt();
-      counter =0;
-    }
-    else{
-      startTime = micros();
-      secondTimer->setOverflow(500, MICROSEC_FORMAT); 
-      secondTimer->resume();
-    }
-  }*/
-  
-  //Serial.println((String)"fire = " + (micros()-startTime)); 
-}
-
-void sendHigh(void)
-{ 
-
-  digitalWrite(TRIGPIN,HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIGPIN,LOW);
-  Serial.println("BASSO");
-  secondTimer->attachInterrupt(sendLow);
-  firstTimer->detachInterrupt();
-  
-  secondTimer->resume();
-  
-}
-
 
 
 void taskFire(void *pvParameters) {
@@ -323,16 +261,7 @@ void taskFire(void *pvParameters) {
  
 }
 
-void taskVal(void *pvParameters) {
-  TickType_t xLastWakeTime_val;
 
-  xLastWakeTime_val = xTaskGetTickCount();
-  while(true){
-    Serial.println("memory =  " + String(uxTaskGetStackHighWaterMark(xTaskGetHandle("fireStart"))));
-  
-     vTaskDelayUntil(&xLastWakeTime_val,((TickType_t)400/portTICK_PERIOD_MS));
-  }
-}
 
 void setup(){
 
@@ -342,17 +271,10 @@ void setup(){
     fireSelector();
     fogSelector();
     init_fixture();
-    /*Serial.setTx(D1);
+    Serial.setTx(D1);
     Serial.setRx(D0);
-    Serial.begin(250000);*/
-    Serial.begin(115200);
+    Serial.begin(250000);
 
-    firstTimer->setOverflow(2, MICROSEC_FORMAT); 
-    
-    
-    secondTimer->setOverflow(10, MICROSEC_FORMAT); 
-    
-    
     
     buffer_mtx = xSemaphoreCreateMutex();   /* semaphores for buffer*/
     xSemaphoreGive(buffer_mtx);
@@ -377,8 +299,6 @@ void setup(){
     xTaskCreate(taskInputProcessing, "inputProc",51, NULL,1, NULL);
     
     xTaskCreate(taskSendingOutput, "outputSend", 65, NULL, 0, NULL);
-
-    xTaskCreate(taskVal, "validationTa", 565, NULL, 2, NULL);
 
     xTaskCreate(taskFog, "fogStart", 27, NULL, 2, &taskFogHandle);
     xTaskCreate(taskFire, "fireStart", 42, NULL, 3, &taskFireHandle);
