@@ -1,0 +1,28 @@
+CAMPIONAMENTO REC ---> 5000Hz
+
+CAMPIONAMENTO + ELABORAZIONE --> 4600Hz
+
+TEMPI
+    rec = 414 ms(2048 samples)(1024 samples 206ms)(512 samples 104ms)
+    elaboration = 30ms (2048 samples) (512 samples 9ms)
+    output = 2ms (58 canali) (24ms per 512)
+    fog =  1ms
+    fire = 13ms 
+    rec + elabration = 221 (1024 samples)
+
+
+NUOVI TEMPI (periodo 250)
+	rec = 170 sample, esecuzione processore (37620 micro lettura dati + 12 micros)
+	proc = 1ms
+	output = caso peggiore 24 ms 512 canali e 3 per 58
+	fog = 37 micros
+	fire = 35 micros
+	
+	
+	
+SENSORE
+	tempo 9ms NO SCHERZO 42 fottuti microsecondi
+	memoria: 
+	Lo sketch usa 43556 byte (4%) dello spazio disponibile per i programmi. Il massimo è 1048576 byte.
+Le variabili globali usano 2936 byte (2%) di memoria dinamica, lasciando altri 95368 byte liberi per le variabili locali. Il massimo è 98304 byte.
+
