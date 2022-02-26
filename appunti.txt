@@ -17,6 +17,14 @@ NUOVI TEMPI (periodo 250)
 	output = caso peggiore 24 ms 512 canali e 3 per 58
 	fog = 37 micros
 	fire = 35 micros
+	
+	
+	
+SENSORE
+	tempo 9ms NO SCHERZO 42 fottuti microsecondi
+	memoria: 
+	Lo sketch usa 43556 byte (4%) dello spazio disponibile per i programmi. Il massimo è 1048576 byte.
+Le variabili globali usano 2936 byte (2%) di memoria dinamica, lasciando altri 95368 byte liberi per le variabili locali. Il massimo è 98304 byte.
 
 
 SENSORE FIAMME

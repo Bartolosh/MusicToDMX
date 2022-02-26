@@ -8,9 +8,9 @@ void init_fog(uint16_t ch){
 
 TaskHandle_t taskFogHandle = NULL;
 
-//function that manage interrupt
+/*function that manage interrupt*/
 void fogHandler(void) {
-  //this function awake the task 
+  /*this function awake the task*/
   BaseType_t xYieldRequired = xTaskResumeFromISR(taskFogHandle);   /* INCLUDE_vTaskSuspend and INCLUDE_xTaskResumeFromISR must be defined as 1 */
   portYIELD_FROM_ISR(xYieldRequired);
 }
