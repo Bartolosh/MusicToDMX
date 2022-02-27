@@ -30,8 +30,8 @@ SemaphoreHandle_t fog_mtx;
 SemaphoreHandle_t fire_mtx;
 
 int32_t buffer[SAMPLES] = {0};
-HardwareSerial Serial4(D0,D1);
-RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
+
+RS485Class RS485(Serial, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
 
 
 uint16_t bpm = 120;
@@ -212,7 +212,6 @@ void taskSendingOutput(void *pvParameters){
           }
           count_fire++;
           fire_state=START;
-          Serial.println("START");
         }
         else{
           fire_state=STOP;
@@ -253,6 +252,7 @@ void taskFire(void *pvParameters) {
     vTaskDelay(11/portTICK_PERIOD_MS); /*11 millis for 1.5 m*/
     obstacle1 = digitalRead(ECHOPIN_1);
     obstacle2 = digitalRead(ECHOPIN_2);
+    
     if(obstacle1 == 1 && obstacle2 == 1){
           if(uxSemaphoreGetCount(fire_mtx) == 1){
             xSemaphoreTake(fire_mtx, portMAX_DELAY);
@@ -262,7 +262,6 @@ void taskFire(void *pvParameters) {
   }
  
 }
-
 
 void setup(){
 
@@ -274,10 +273,9 @@ void setup(){
     fireSelector();
     fogSelector();
     init_fixture();
-    /*Serial.setTx(D1);
+    Serial.setTx(D1);
     Serial.setRx(D0);
-    Serial.begin(250000);*/
-    Serial.begin(115200);
+    Serial.begin(250000);
 
     
     buffer_mtx = xSemaphoreCreateMutex();   /* semaphores for buffer*/
@@ -298,14 +296,14 @@ void setup(){
     
     color_mtx = xSemaphoreCreateBinary(); 
 
-    xTaskCreate(taskInputRecording, "inputRec", 81, NULL, 4, NULL); 
+    xTaskCreate(taskInputRecording, "inputRec", 81, NULL, 1, NULL); 
 
     xTaskCreate(taskInputProcessing, "inputProc",51, NULL,1, NULL);
     
     xTaskCreate(taskSendingOutput, "outputSend", 65, NULL, 0, NULL);
-
+    
     xTaskCreate(taskFog, "fogStart", 27, NULL, 2, &taskFogHandle);
-    xTaskCreate(taskFire, "fireStart", 40, NULL, 3, &taskFireHandle);
+    xTaskCreate(taskFire, "fireStart", 30, NULL, 3, &taskFireHandle);
     
     vTaskStartScheduler();                                                /* explicit call needed */
     

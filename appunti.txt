@@ -30,5 +30,5 @@ Le variabili globali usano 2936 byte (2%) di memoria dinamica, lasciando altri 9
 SENSORE FIAMME
 tempo 48 micros
 memoria:
-Lo sketch usa 41380 byte (3%) dello spazio disponibile per i programmi. Il massimo è 1048576 byte.
+Lo sketch usa 41428 byte (3%) dello spazio disponibile per i programmi. Il massimo è 1048576 byte.
 Le variabili globali usano 2936 byte (2%) di memoria dinamica, lasciando altri 95368 byte liberi per le variabili locali. Il massimo è 98304 byte.
