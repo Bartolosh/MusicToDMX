@@ -16,8 +16,10 @@
 #define THRESHOLD_MOV 400   
 #define THRESHOLD 350 
 
-#define TRIGPIN D8
-#define ECHOPIN D10
+#define TRIGPIN_1 D8
+#define ECHOPIN_1 D10
+#define TRIGPIN_2 D9
+#define ECHOPIN_2 D11
 
 SemaphoreHandle_t buffer_mtx;
 SemaphoreHandle_t new_data_mtx;
@@ -28,8 +30,8 @@ SemaphoreHandle_t fog_mtx;
 SemaphoreHandle_t fire_mtx;
 
 int32_t buffer[SAMPLES] = {0};
-
-RS485Class RS485(Serial, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
+HardwareSerial Serial4(D0,D1);
+RS485Class RS485(Serial4, RS485_DEFAULT_TX_PIN, RS485_DEFAULT_DE_PIN, RS485_DEFAULT_RE_PIN);
 
 
 uint16_t bpm = 120;
@@ -210,6 +212,7 @@ void taskSendingOutput(void *pvParameters){
           }
           count_fire++;
           fire_state=START;
+          Serial.println("START");
         }
         else{
           fire_state=STOP;
@@ -235,25 +238,27 @@ void taskFog(void *pvParameters) {
 
 void taskFire(void *pvParameters) {
 
-  uint8_t obstacle = 0;
+  uint8_t obstacle1 = 0;
+  uint8_t obstacle2 = 0;
   while (true) {
     vTaskSuspend(NULL);
-   
-    digitalWrite( TRIGPIN, LOW );
+    digitalWrite(TRIGPIN_1, LOW );
+    digitalWrite(TRIGPIN_2, LOW );
     delayMicroseconds(2);
-    digitalWrite(TRIGPIN,HIGH);
+    digitalWrite(TRIGPIN_2,HIGH);
+    digitalWrite(TRIGPIN_1,HIGH);
     delayMicroseconds(10);
-    digitalWrite(TRIGPIN,LOW);
-    
+    digitalWrite(TRIGPIN_1,LOW);
+    digitalWrite(TRIGPIN_2,LOW); 
     vTaskDelay(11/portTICK_PERIOD_MS); /*11 millis for 1.5 m*/
-    
-    obstacle = digitalRead(ECHOPIN);
-    if(obstacle == 1){
+    obstacle1 = digitalRead(ECHOPIN_1);
+    obstacle2 = digitalRead(ECHOPIN_2);
+    if(obstacle1 == 1 && obstacle2 == 1){
           if(uxSemaphoreGetCount(fire_mtx) == 1){
             xSemaphoreTake(fire_mtx, portMAX_DELAY);
           }
     }
-   
+    
   }
  
 }
@@ -261,15 +266,18 @@ void taskFire(void *pvParameters) {
 
 void setup(){
 
-    pinMode(TRIGPIN, OUTPUT);
-    pinMode(ECHOPIN, INPUT);
+    pinMode(TRIGPIN_1, OUTPUT);
+    pinMode(TRIGPIN_2, OUTPUT);
+    pinMode(ECHOPIN_1, INPUT);
+    pinMode(ECHOPIN_2, INPUT);
     
     fireSelector();
     fogSelector();
     init_fixture();
-    Serial.setTx(D1);
+    /*Serial.setTx(D1);
     Serial.setRx(D0);
-    Serial.begin(250000);
+    Serial.begin(250000);*/
+    Serial.begin(115200);
 
     
     buffer_mtx = xSemaphoreCreateMutex();   /* semaphores for buffer*/
@@ -297,7 +305,7 @@ void setup(){
     xTaskCreate(taskSendingOutput, "outputSend", 65, NULL, 0, NULL);
 
     xTaskCreate(taskFog, "fogStart", 27, NULL, 2, &taskFogHandle);
-    xTaskCreate(taskFire, "fireStart", 30, NULL, 3, &taskFireHandle);
+    xTaskCreate(taskFire, "fireStart", 40, NULL, 3, &taskFireHandle);
     
     vTaskStartScheduler();                                                /* explicit call needed */
     
